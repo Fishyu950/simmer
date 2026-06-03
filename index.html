@@ -190,12 +190,12 @@
   .detail-body { padding:20px 20px 120px; }
   .d-section { margin-bottom:24px; }
   .d-section-title { font-size:13px; color:var(--muted); font-weight:600; letter-spacing:0.25em; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border); text-transform:uppercase; }
-  .ingredient-row { display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid var(--border); font-size:17px; }
+  .ingredient-row { display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid var(--border); font-size:17px; font-weight:600; }
   .ingredient-row:last-child { border:none; }
-  .ingredient-row .amt { color:var(--accent); font-weight:600; font-size:14px; }
+  .ingredient-row .amt { color:#33432B; font-weight:700; font-size:14px; }
   .step-row { display:flex; gap:14px; margin-bottom:16px; align-items:flex-start; }
   .step-num { width:28px; height:28px; border-radius:50%; background:#fab62d; color:white; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:3px; }
-  .step-text { font-size:17px; line-height:1.9; color:var(--text); font-weight:500; }
+  .step-text { font-size:17px; line-height:1.9; color:var(--text); font-weight:700; }
   .source-btn { display:flex; align-items:center; gap:10px; width:100%; padding:14px 18px; background:var(--card); border:none; border-radius:14px; font-family:'Noto Serif TC',serif; font-size:14px; color:var(--text2); cursor:pointer; text-decoration:none; transition:all .2s; letter-spacing:0.06em; box-shadow:0 1px 4px rgba(32,40,8,0.07); }
   .source-btn:hover { color:var(--accent); }
 
@@ -8336,9 +8336,9 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
           <span class="settings-row-label">立即同步 Google Sheets</span>
           <span class="material-symbols-outlined settings-row-arrow">chevron_right</span>
         </button>
-        <button class="settings-row" onclick="exportToExcelAll()">
+        <button class="settings-row" onclick="openGoogleSheet()">
           <span class="material-symbols-outlined settings-row-icon">table_view</span>
-          <span class="settings-row-label">開啟 Excel 試算表</span>
+          <span class="settings-row-label">開啟 Google 試算表</span>
           <span class="material-symbols-outlined settings-row-arrow">open_in_new</span>
         </button>
         <button class="settings-row" onclick="openRecycleBin()">
@@ -9545,6 +9545,7 @@ function initGoogleAuth() {
         avatar: localStorage.getItem(SIMMER_AVATAR_KEY) || '',
       };
       updateAuthUI();
+      updateHeaderUser(currentUser.name, currentUser.avatar);
       try {
         const sheetId = await ensureSheet(token);
         await pullFromSheets(sheetId, token);
@@ -9603,6 +9604,7 @@ async function handleOAuthCallback() {
     localStorage.setItem(SIMMER_NAME_KEY,   currentUser.name);
     localStorage.setItem(SIMMER_AVATAR_KEY, currentUser.avatar);
     updateAuthUI();
+    updateHeaderUser(currentUser.name, currentUser.avatar);
     showToast('✅ 已登入 Google，正在初始化同步…');
     const sheetId = await ensureSheet(tok);
     await pullFromSheets(sheetId, tok);
@@ -9642,6 +9644,7 @@ async function googleLogin() {
     localStorage.setItem(SIMMER_NAME_KEY,   currentUser.name);
     localStorage.setItem(SIMMER_AVATAR_KEY, currentUser.avatar);
     updateAuthUI();
+    updateHeaderUser(currentUser.name, currentUser.avatar);
     showToast('✅ 已登入 Google，正在初始化同步…');
     const sheetId = await ensureSheet(token);
     await pullFromSheets(sheetId, token);
@@ -9969,6 +9972,14 @@ function handleImport(input) {
     }
   };
   reader.readAsText(file);
+}
+
+// ── 開啟 Google 試算表 ──
+function openGoogleSheet() {
+  if (!currentUser) { showToast('請先登入並同步一次'); return; }
+  const sheetId = localStorage.getItem(SIMMER_SHEET_ID_KEY + currentUser.email);
+  if (!sheetId) { showToast('請先登入並同步一次'); return; }
+  window.open('https://docs.google.com/spreadsheets/d/' + sheetId, '_blank', 'noopener');
 }
 
 // ── EXPORT ALL TO EXCEL ──
