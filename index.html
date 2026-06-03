@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root {
     --bg: #e9eeea;
@@ -8467,6 +8468,18 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
 <script>
 const DEFAULT_TAGS = ['家常菜','飲料','豆漿飲','湯品','台式早午餐'];
 
+// ── 雲端同步設定 ──
+// 請至 Google Cloud Console 建立 OAuth 2.0 用戶端並填入 Client ID
+const GOOGLE_CLIENT_ID   = '581562758769-lpbml8lt4qs0tamm4i68u41n2bupeqrd.apps.googleusercontent.com';
+const SIMMER_SHEET_ID_KEY  = 'simmer_sheet_';
+const SIMMER_EMAIL_KEY     = 'simmer_user_email';
+const SIMMER_NAME_KEY      = 'simmer_user_name';
+const SIMMER_AVATAR_KEY    = 'simmer_user_avatar';
+const RECIPES_SHEET        = 'Recipes';
+const RECYCLEBIN_SHEET     = 'RecycleBin';
+const RECIPES_COLS         = ['id','name','tags','url','ingredients','steps','notes','updatedAt'];
+const RECYCLEBIN_COLS      = ['id','name','tags','url','ingredients','steps','notes','updatedAt','deletedAt'];
+
 // ── 預設食譜資料 ──
 const SAMPLE_RECIPES = [
   { id:1, name:'麻辣牛肉麵', url:'https://www.douyin.com', notes:'',
@@ -9154,6 +9167,7 @@ let catEmojis = {};
 
 // ── 從 localStorage 載入資料 ──
 loadFromStorage();
+cleanupOldDeleted();
 
 function renderList(list) {
   renderAllGrid(list || recipes);
@@ -9361,7 +9375,8 @@ function saveRecipe() {
     src: url.includes('douyin') ? '抖音' : url.includes('weixin') || url.includes('wx') ? '微信' : '手動',
     tags: selectedTag ? [selectedTag] : [],
     ingredients: readIngredients().filter(i => i.n),
-    steps: readSteps().filter(s => s.trim())
+    steps: readSteps().filter(s => s.trim()),
+    updatedAt: new Date().toISOString(),
   };
   if (currentEditId) {
     const idx = recipes.findIndex(r => r.id === currentEditId);
@@ -9372,6 +9387,7 @@ function saveRecipe() {
     recipes.unshift(data);
     showToast('✅ 食譜已新增'); saveToStorage(); refreshHome();
   }
+  syncAfterWrite();
   closeEdit();
   setTimeout(() => renderList(recipes), 350);
 }
@@ -9389,6 +9405,10 @@ renderFolderGrid();
 renderAllGrid(recipes);
 document.getElementById('editModeMask').classList.remove('show');
 folderEditMode = false;
+
+// ── 啟動 Google Auth 初始化 ──
+handleOAuthCallback();
+initGoogleAuth();
 
 // ── NAV ──
 let currentPage = 'home';
@@ -9491,10 +9511,9 @@ function goHome() {
   closeRecycleBin();
 }
 
-// ── GOOGLE AUTH (佔位，之後串接真實 OAuth) ──
-// 之後替換成 ECHO 同款 GSI 流程
-// Client ID: 待填入
-let currentUser = null; // { name, email, avatar, token }
+// ── GOOGLE AUTH & SHEETS 雲端同步 ──
+let currentUser = null; // { name, email, avatar }
+let googleTokenClient = null, accessToken = null, tokenExpiry = 0;
 
 function updateAuthUI() {
   const loggedIn = !!currentUser;
@@ -9508,25 +9527,334 @@ function updateAuthUI() {
   }
 }
 
-function googleLogin() {
-  // TODO: 換成真實 GSI OAuth 流程（參考 ECHO 架構）
-  showToast('Google 登入功能即將上線 🔧');
+// ── GSI 初始化 ──
+function initGoogleAuth() {
+  if (typeof google === 'undefined' || !google.accounts) { setTimeout(initGoogleAuth, 200); return; }
+  googleTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/drive.file email profile',
+    callback: () => {},
+  });
+  // 嘗試靜默還原上次登入（不跳視窗）
+  const savedEmail = localStorage.getItem(SIMMER_EMAIL_KEY);
+  if (savedEmail) {
+    requestToken('').then(async token => {
+      currentUser = {
+        email:  savedEmail,
+        name:   localStorage.getItem(SIMMER_NAME_KEY)   || savedEmail,
+        avatar: localStorage.getItem(SIMMER_AVATAR_KEY) || '',
+      };
+      updateAuthUI();
+      try {
+        const sheetId = await ensureSheet(token);
+        await pullFromSheets(sheetId, token);
+        showToast('☁️ 雲端同步完成');
+      } catch(e) { console.warn('[Simmer] startup sync failed:', e); }
+    }).catch(() => {});
+  }
+}
+
+function requestToken(promptVal = '') {
+  return new Promise((resolve, reject) => {
+    if (!googleTokenClient) { reject(new Error('GSI not ready')); return; }
+    const isSilent = !promptVal || promptVal === 'none';
+    let escalated = false;
+    const handler = resp => {
+      if (resp.error) { reject(new Error(resp.error)); return; }
+      if (!isSilent && resp.scope && !resp.scope.includes('drive.file') && !escalated) {
+        escalated = true;
+        googleTokenClient.callback = handler;
+        googleTokenClient.requestAccessToken({ prompt: 'consent' });
+        return;
+      }
+      accessToken = resp.access_token;
+      tokenExpiry = Date.now() + (resp.expires_in - 60) * 1000;
+      resolve(accessToken);
+    };
+    googleTokenClient.callback = handler;
+    googleTokenClient.requestAccessToken({ prompt: promptVal });
+  });
+}
+
+async function ensureToken() {
+  if (accessToken && Date.now() < tokenExpiry) return accessToken;
+  return requestToken('');
+}
+
+// ── iOS OAuth redirect callback ──
+async function handleOAuthCallback() {
+  const hash = window.location.hash.slice(1);
+  if (!hash.includes('access_token')) return;
+  const params = new URLSearchParams(hash);
+  const tok = params.get('access_token');
+  const expiresIn = parseInt(params.get('expires_in') || '3599', 10);
+  if (!tok) return;
+  history.replaceState(null, '', window.location.pathname);
+  accessToken = tok;
+  tokenExpiry = Date.now() + (expiresIn - 60) * 1000;
+  try {
+    const resp = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${tok}` }
+    });
+    const info = await resp.json();
+    if (!info.email) return;
+    currentUser = { email: info.email, name: info.name || info.email, avatar: info.picture || '' };
+    localStorage.setItem(SIMMER_EMAIL_KEY,  currentUser.email);
+    localStorage.setItem(SIMMER_NAME_KEY,   currentUser.name);
+    localStorage.setItem(SIMMER_AVATAR_KEY, currentUser.avatar);
+    updateAuthUI();
+    showToast('✅ 已登入 Google，正在初始化同步…');
+    const sheetId = await ensureSheet(tok);
+    await pullFromSheets(sheetId, tok);
+    showToast('☁️ 雲端同步完成');
+  } catch(e) {
+    console.error('[Simmer] OAuth callback error:', e);
+    showToast('Google 登入失敗');
+  }
+}
+
+async function googleLogin() {
+  if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
+    alert('尚未設定 Google Client ID，請在 index.html 頂部填入 GOOGLE_CLIENT_ID');
+    return;
+  }
+  // iOS Safari（非 PWA standalone）— 使用 redirect flow
+  if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.navigator.standalone) {
+    const scope = 'https://www.googleapis.com/auth/drive.file email profile';
+    window.location.href = 'https://accounts.google.com/o/oauth2/v2/auth'
+      + '?client_id='    + encodeURIComponent(GOOGLE_CLIENT_ID)
+      + '&redirect_uri=' + encodeURIComponent(location.origin + location.pathname)
+      + '&response_type=token'
+      + '&scope='        + encodeURIComponent(scope)
+      + '&prompt=select_account';
+    return;
+  }
+  if (!googleTokenClient) { showToast('Google 登入初始化中，請稍後再試'); return; }
+  try {
+    const token = await requestToken('select_account');
+    const resp  = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const info = await resp.json();
+    if (!info.email) throw new Error('no email');
+    currentUser = { email: info.email, name: info.name || info.email, avatar: info.picture || '' };
+    localStorage.setItem(SIMMER_EMAIL_KEY,  currentUser.email);
+    localStorage.setItem(SIMMER_NAME_KEY,   currentUser.name);
+    localStorage.setItem(SIMMER_AVATAR_KEY, currentUser.avatar);
+    updateAuthUI();
+    showToast('✅ 已登入 Google，正在初始化同步…');
+    const sheetId = await ensureSheet(token);
+    await pullFromSheets(sheetId, token);
+    showToast('☁️ 雲端同步完成');
+  } catch(e) {
+    console.error('[Simmer] login error:', e);
+    showToast('Google 登入失敗，請再試一次');
+  }
 }
 
 function googleLogout() {
   if (!confirm('確定要登出嗎？')) return;
   currentUser = null;
+  accessToken = null;
+  tokenExpiry = 0;
+  localStorage.removeItem(SIMMER_EMAIL_KEY);
+  localStorage.removeItem(SIMMER_NAME_KEY);
+  localStorage.removeItem(SIMMER_AVATAR_KEY);
   updateAuthUI();
   showToast('已登出');
 }
 
-function syncToSheets() {
-  // TODO: 換成真實 Google Sheets API 同步（參考 ECHO 架構）
-  if (!currentUser) {
-    showToast('請先登入 Google 帳號');
-    return;
+async function syncToSheets() {
+  if (!currentUser) { showToast('請先登入 Google 帳號'); return; }
+  try {
+    showToast('☁️ 同步中…');
+    const token   = await ensureToken();
+    const sheetId = await ensureSheet(token);
+    await pullFromSheets(sheetId, token);
+    await pushAllToSheets(token);
+    showToast('☁️ 同步完成');
+  } catch(e) {
+    console.error('[Simmer] sync error:', e);
+    showToast('同步失敗，請稍後再試');
   }
-  showToast('同步功能即將上線 🔧');
+}
+
+// ── Sheets 工具函數 ──
+
+function recipeToRow(r, isDeleted = false) {
+  const row = [
+    String(r.id || ''),
+    r.name || '',
+    JSON.stringify(r.tags || []),
+    r.url  || '',
+    JSON.stringify(r.ingredients || []),
+    JSON.stringify(r.steps || []),
+    r.notes || '',
+    r.updatedAt || '',
+  ];
+  if (isDeleted) row.push(r.deletedAt || '');
+  return row;
+}
+
+function rowToRecipe(row, isDeleted = false) {
+  try {
+    const r = {
+      id:          isNaN(Number(row[0])) ? row[0] : Number(row[0]),
+      name:        row[1] || '',
+      tags:        JSON.parse(row[2] || '[]'),
+      url:         row[3] || '',
+      ingredients: JSON.parse(row[4] || '[]'),
+      steps:       JSON.parse(row[5] || '[]'),
+      notes:       row[6] || '',
+      updatedAt:   row[7] || '',
+    };
+    if (isDeleted) r.deletedAt = row[8] || '';
+    return r;
+  } catch { return null; }
+}
+
+async function sheetsReq(method, url, token, body) {
+  const opts = {
+    method,
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+  };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  const resp = await fetch(url, opts);
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(`Sheets ${resp.status}: ${((err.error || {}).message) || JSON.stringify(err)}`);
+  }
+  return resp.json();
+}
+
+async function clearAndWrite(sheetId, tab, rows, token) {
+  await sheetsReq('POST',
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(tab)}:clear`,
+    token, {});
+  await sheetsReq('PUT',
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(tab)}!A1?valueInputOption=RAW`,
+    token, { values: rows, majorDimension: 'ROWS' });
+}
+
+async function readSheetTab(sheetId, tab, token) {
+  const data = await sheetsReq('GET',
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(tab)}!A:J`,
+    token);
+  return data.values || [];
+}
+
+async function findExistingSheet(token) {
+  const q = encodeURIComponent("name='Simmer 食譜本' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false");
+  const data = await sheetsReq('GET',
+    `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)&spaces=drive`,
+    token);
+  return (data.files && data.files.length) ? data.files[0].id : null;
+}
+
+async function createSimmerSpreadsheet(token) {
+  const driveData = await sheetsReq('POST', 'https://www.googleapis.com/drive/v3/files', token,
+    { name: 'Simmer 食譜本', mimeType: 'application/vnd.google-apps.spreadsheet', parents: ['root'] });
+  const sid = driveData.id;
+  const meta = await sheetsReq('GET',
+    `https://sheets.googleapis.com/v4/spreadsheets/${sid}?fields=sheets/properties`, token);
+  const firstId = meta.sheets[0].properties.sheetId;
+  await sheetsReq('POST', `https://sheets.googleapis.com/v4/spreadsheets/${sid}:batchUpdate`, token, {
+    requests: [
+      { updateSheetProperties: { properties: { sheetId: firstId, title: RECIPES_SHEET }, fields: 'title' } },
+      { addSheet: { properties: { title: RECYCLEBIN_SHEET } } },
+    ]
+  });
+  await clearAndWrite(sid, RECIPES_SHEET,    [RECIPES_COLS],    token);
+  await clearAndWrite(sid, RECYCLEBIN_SHEET, [RECYCLEBIN_COLS], token);
+  localStorage.setItem(SIMMER_SHEET_ID_KEY + currentUser.email, sid);
+  return sid;
+}
+
+async function ensureSheet(token) {
+  let sheetId = await findExistingSheet(token);
+  if (sheetId) {
+    localStorage.setItem(SIMMER_SHEET_ID_KEY + currentUser.email, sheetId);
+    // 確保 RecycleBin tab 存在（舊版試算表可能缺少）
+    try {
+      const meta = await sheetsReq('GET',
+        `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets/properties/title`, token);
+      const tabs = (meta.sheets || []).map(s => s.properties.title);
+      if (!tabs.includes(RECYCLEBIN_SHEET)) {
+        await sheetsReq('POST', `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, token,
+          { requests: [{ addSheet: { properties: { title: RECYCLEBIN_SHEET } } }] });
+        await clearAndWrite(sheetId, RECYCLEBIN_SHEET, [RECYCLEBIN_COLS], token);
+      }
+    } catch(e) { console.warn('[Simmer] ensureRecycleBinTab:', e); }
+    return sheetId;
+  }
+  // 備用：檢查 localStorage 快取的 ID
+  const cached = localStorage.getItem(SIMMER_SHEET_ID_KEY + currentUser.email);
+  if (cached) {
+    try {
+      const check = await sheetsReq('GET',
+        `https://www.googleapis.com/drive/v3/files/${cached}?fields=id,trashed`, token);
+      if (!check.trashed) return cached;
+    } catch { /**/ }
+    localStorage.removeItem(SIMMER_SHEET_ID_KEY + currentUser.email);
+  }
+  // 找不到就建立新試算表
+  return createSimmerSpreadsheet(token);
+}
+
+async function pullFromSheets(sheetId, token) {
+  const [recRows, binRows] = await Promise.all([
+    readSheetTab(sheetId, RECIPES_SHEET,    token),
+    readSheetTab(sheetId, RECYCLEBIN_SHEET, token),
+  ]);
+
+  // 跳過 header row，解析並合併（以 updatedAt 為準，新的蓋舊的）
+  const sheetsRecipes = recRows.slice(1).map(r => rowToRecipe(r, false)).filter(Boolean);
+  const sheetsBin     = binRows.slice(1).map(r => rowToRecipe(r, true )).filter(Boolean);
+
+  const byId = Object.fromEntries(recipes.map(r => [String(r.id), r]));
+  sheetsRecipes.forEach(sr => {
+    const local = byId[String(sr.id)];
+    if (!local || (sr.updatedAt && sr.updatedAt > (local.updatedAt || ''))) byId[String(sr.id)] = sr;
+  });
+  recipes = Object.values(byId);
+  nextId  = Math.max(nextId, ...recipes.map(r => Number(r.id) || 0)) + 1;
+
+  const binById = Object.fromEntries(deletedRecipes.map(r => [String(r.id), r]));
+  sheetsBin.forEach(sr => {
+    const local = binById[String(sr.id)];
+    if (!local || (sr.updatedAt && sr.updatedAt > (local.updatedAt || ''))) binById[String(sr.id)] = sr;
+  });
+  deletedRecipes = Object.values(binById);
+
+  cleanupOldDeleted();
+  saveToStorage();
+  refreshHome();
+  updateRecycleBadge();
+}
+
+async function pushAllToSheets(token) {
+  const sheetId = localStorage.getItem(SIMMER_SHEET_ID_KEY + currentUser.email);
+  if (!sheetId) return;
+  await Promise.all([
+    clearAndWrite(sheetId, RECIPES_SHEET,
+      [RECIPES_COLS,    ...recipes.map(r => recipeToRow(r, false))], token),
+    clearAndWrite(sheetId, RECYCLEBIN_SHEET,
+      [RECYCLEBIN_COLS, ...deletedRecipes.map(r => recipeToRow(r, true))], token),
+  ]);
+}
+
+function syncAfterWrite() {
+  if (!currentUser || !accessToken) return;
+  ensureToken()
+    .then(tok => pushAllToSheets(tok))
+    .catch(e => { console.warn('[Simmer] sync write failed:', e); showToast('☁️ 同步失敗，資料已存本機'); });
+}
+
+function cleanupOldDeleted() {
+  const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const before = deletedRecipes.length;
+  deletedRecipes = deletedRecipes.filter(r => !r.deletedAt || new Date(r.deletedAt).getTime() > cutoff);
+  if (deletedRecipes.length !== before) { saveToStorage(); updateRecycleBadge(); }
 }
 
 // ── RECYCLE BIN ──
@@ -9564,10 +9892,12 @@ function renderRecycleBin() {
 function deleteRecipe(id) {
   const idx = recipes.findIndex(r => r.id === id);
   if (idx < 0) return;
-  deletedRecipes.unshift(recipes[idx]);
+  const deleted = { ...recipes[idx], deletedAt: new Date().toISOString() };
+  deletedRecipes.unshift(deleted);
   recipes.splice(idx, 1);
   updateRecycleBadge();
   saveToStorage();
+  syncAfterWrite();
   refreshHome();
   closeDetail();
   showToast('已移至回收桶');
@@ -9576,10 +9906,13 @@ function deleteRecipe(id) {
 function restoreRecipe(id) {
   const idx = deletedRecipes.findIndex(r => r.id === id);
   if (idx < 0) return;
-  recipes.unshift(deletedRecipes[idx]);
+  const restored = { ...deletedRecipes[idx], updatedAt: new Date().toISOString() };
+  delete restored.deletedAt;
+  recipes.unshift(restored);
   deletedRecipes.splice(idx, 1);
   updateRecycleBadge();
   saveToStorage();
+  syncAfterWrite();
   renderRecycleBin();
   refreshHome();
   showToast('✅ 食譜已還原');
@@ -9591,6 +9924,7 @@ function emptyRecycleBin() {
   deletedRecipes = [];
   updateRecycleBadge();
   saveToStorage();
+  syncAfterWrite();
   renderRecycleBin();
   showToast('🗑 回收桶已清空');
 }
