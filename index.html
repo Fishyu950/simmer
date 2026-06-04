@@ -52,7 +52,7 @@
   .logo em { color:#4a6035; font-style:normal; }
   .logo-sub { display:none; }
   .deco { display:none; }
-  .header-avatar { width:52px; height:52px; border-radius:50%; background:#fff; border:3px solid #fff; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; cursor:pointer; }
+  .header-avatar { width:52px; height:52px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; cursor:pointer; }
   .header-avatar img { width:100%; height:100%; object-fit:cover; }
   .header-avatar .material-symbols-outlined { font-size:30px; color:#33432B; }
 
@@ -8359,7 +8359,7 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
       </div>
 
       <!-- 版本 -->
-      <div class="settings-version">Simmer v0.2 · build 20260601</div>
+      <div class="settings-version">Simmer v0.3 · build 20260604</div>
     </div>
   </div>
 
@@ -9688,7 +9688,7 @@ function recipeToRow(r, isDeleted = false) {
   const row = [
     String(r.id || ''),
     r.name || '',
-    JSON.stringify(r.tags || []),
+    (r.tags || []).join(', '),
     r.url  || '',
     JSON.stringify(r.ingredients || []),
     JSON.stringify(r.steps || []),
@@ -9704,7 +9704,7 @@ function rowToRecipe(row, isDeleted = false) {
     const r = {
       id:          isNaN(Number(row[0])) ? row[0] : Number(row[0]),
       name:        row[1] || '',
-      tags:        JSON.parse(row[2] || '[]'),
+      tags:        (() => { const v = row[2] || ''; try { const p = JSON.parse(v); return Array.isArray(p) ? p : v.split(',').map(t => t.trim()).filter(Boolean); } catch { return v.split(',').map(t => t.trim()).filter(Boolean); } })(),
       url:         row[3] || '',
       ingredients: JSON.parse(row[4] || '[]'),
       steps:       JSON.parse(row[5] || '[]'),
@@ -9714,6 +9714,47 @@ function rowToRecipe(row, isDeleted = false) {
     if (isDeleted) r.deletedAt = row[8] || '';
     return r;
   } catch { return null; }
+}
+
+function buildFormatRequests(numericSheetId, colCount) {
+  const sid = numericSheetId;
+  return [
+    {
+      repeatCell: {
+        range: { sheetId: sid, startRowIndex: 0, endRowIndex: 1 },
+        cell: {
+          userEnteredFormat: {
+            backgroundColor: { red: 51/255, green: 67/255, blue: 43/255 },
+            textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, bold: true }
+          }
+        },
+        fields: 'userEnteredFormat(backgroundColor,textFormat)'
+      }
+    },
+    {
+      repeatCell: {
+        range: { sheetId: sid, startRowIndex: 1, startColumnIndex: 4, endColumnIndex: 7 },
+        cell: { userEnteredFormat: { wrapStrategy: 'WRAP' } },
+        fields: 'userEnteredFormat.wrapStrategy'
+      }
+    },
+    {
+      addBanding: {
+        bandedRange: {
+          range: { sheetId: sid, startRowIndex: 1, startColumnIndex: 0, endColumnIndex: colCount },
+          rowProperties: {
+            firstBandColor:  { red: 245/255, green: 242/255, blue: 232/255 },
+            secondBandColor: { red: 1, green: 1, blue: 1 }
+          }
+        }
+      }
+    },
+    {
+      autoResizeDimensions: {
+        dimensions: { sheetId: sid, dimension: 'COLUMNS', startIndex: 0, endIndex: colCount }
+      }
+    }
+  ];
 }
 
 async function sheetsReq(method, url, token, body) {
@@ -9761,14 +9802,23 @@ async function createSimmerSpreadsheet(token) {
   const meta = await sheetsReq('GET',
     `https://sheets.googleapis.com/v4/spreadsheets/${sid}?fields=sheets/properties`, token);
   const firstId = meta.sheets[0].properties.sheetId;
-  await sheetsReq('POST', `https://sheets.googleapis.com/v4/spreadsheets/${sid}:batchUpdate`, token, {
+  const addResp = await sheetsReq('POST', `https://sheets.googleapis.com/v4/spreadsheets/${sid}:batchUpdate`, token, {
     requests: [
       { updateSheetProperties: { properties: { sheetId: firstId, title: RECIPES_SHEET }, fields: 'title' } },
       { addSheet: { properties: { title: RECYCLEBIN_SHEET } } },
     ]
   });
-  await clearAndWrite(sid, RECIPES_SHEET,    [RECIPES_COLS],    token);
-  await clearAndWrite(sid, RECYCLEBIN_SHEET, [RECYCLEBIN_COLS], token);
+  const recycleBinNumId = addResp.replies[1].addSheet.properties.sheetId;
+  await Promise.all([
+    clearAndWrite(sid, RECIPES_SHEET,    [RECIPES_COLS],    token),
+    clearAndWrite(sid, RECYCLEBIN_SHEET, [RECYCLEBIN_COLS], token),
+  ]);
+  await sheetsReq('POST', `https://sheets.googleapis.com/v4/spreadsheets/${sid}:batchUpdate`, token, {
+    requests: [
+      ...buildFormatRequests(firstId,        RECIPES_COLS.length),
+      ...buildFormatRequests(recycleBinNumId, RECYCLEBIN_COLS.length),
+    ]
+  });
   localStorage.setItem(SIMMER_SHEET_ID_KEY + currentUser.email, sid);
   return sid;
 }
@@ -9835,6 +9885,46 @@ async function pullFromSheets(sheetId, token) {
   updateRecycleBadge();
 }
 
+async function syncCategorySheets(sheetId, token) {
+  const categories = [...new Set(
+    recipes.filter(r => r.tags && r.tags.length > 0).map(r => r.tags[0])
+  )];
+  const meta = await sheetsReq('GET',
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets/properties`, token);
+  const allSheets = meta.sheets || [];
+  const titles    = allSheets.map(s => s.properties.title);
+  const SYSTEM    = [RECIPES_SHEET, RECYCLEBIN_SHEET];
+  const oldCats   = titles.filter(t => !SYSTEM.includes(t));
+  const toAdd     = categories.filter(c => !titles.includes(c));
+  const toRemove  = oldCats.filter(c => !categories.includes(c));
+
+  const newCatNumIds = {};
+  if (toAdd.length || toRemove.length) {
+    const requests = [
+      ...toRemove.map(title => ({
+        deleteSheet: { sheetId: allSheets.find(s => s.properties.title === title).properties.sheetId }
+      })),
+      ...toAdd.map(title => ({ addSheet: { properties: { title } } }))
+    ];
+    const resp = await sheetsReq('POST',
+      `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, token, { requests });
+    let addIdx = 0;
+    (resp.replies || []).forEach(reply => {
+      if (reply.addSheet) newCatNumIds[toAdd[addIdx++]] = reply.addSheet.properties.sheetId;
+    });
+  }
+
+  await Promise.all(categories.map(async cat => {
+    const rows = recipes.filter(r => r.tags?.[0] === cat).map(r => recipeToRow(r, false));
+    await clearAndWrite(sheetId, cat, [RECIPES_COLS, ...rows], token);
+    if (newCatNumIds[cat] !== undefined) {
+      await sheetsReq('POST', `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, token, {
+        requests: buildFormatRequests(newCatNumIds[cat], RECIPES_COLS.length)
+      });
+    }
+  }));
+}
+
 async function pushAllToSheets(token) {
   const sheetId = localStorage.getItem(SIMMER_SHEET_ID_KEY + currentUser.email);
   if (!sheetId) return;
@@ -9844,6 +9934,7 @@ async function pushAllToSheets(token) {
     clearAndWrite(sheetId, RECYCLEBIN_SHEET,
       [RECYCLEBIN_COLS, ...deletedRecipes.map(r => recipeToRow(r, true))], token),
   ]);
+  await syncCategorySheets(sheetId, token);
 }
 
 function syncAfterWrite() {
