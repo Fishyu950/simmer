@@ -8359,7 +8359,7 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
       </div>
 
       <!-- 版本 -->
-      <div class="settings-version">Simmer v0.3 · build 20260604</div>
+      <div class="settings-version">Simmer v0.4 · build 20260605</div>
     </div>
   </div>
 
@@ -8853,6 +8853,12 @@ const EP_DB = {
   '🥐': ['🥐','🍞','🥖','🧇','🥞','🍳','🥚','🥓','🧈','🥑','🫐','🍓','🍇','🍌','🍊','🍋','🍎','🍑','🍒'],
   '🎉': ['🎉','🎊','🏠','❤️','⭐','🌟','🎁','🥂','🍻','🎈','🌸','🌺','🌻','🍀','✨','🌈','🔥','💎','🏆','🎯'],
   '😋': ['😋','👨‍🍳','🧑‍🍳','📝','📖','🌿','🪴','🍃','🌾','🪻','🌙','☀️','🌊','🍀','💡'],
+  '🍎': ['🍎','🍊','🍋','🍇','🍓','🫐','🍑','🥭','🍍','🥥','🥝','🍅'],
+  '🌽': ['🫒','🥑','🍆','🥦','🥬','🥒','🌽','🥕','🧅','🧄','🥔','🍠','🫘','🌰'],
+  '🍔': ['🍞','🥐','🥖','🫓','🥨','🥞','🧇','🌭','🍔','🍟','🍕','🫔','🌮','🌯','🥙','🧆','🍜','🍝','🍛','🍲'],
+  '🦪': ['🍣','🍱','🥟','🦪','🍤','🍙','🍚','🍘','🍥'],
+  '🎂': ['🥮','🍢','🧁','🍰','🎂','🍮','🍭','🍬','🍫','🍿','🍩','🍪','🍯'],
+  '🧃': ['🧃','🥤','🧋','🍵','☕','🫖','🍶','🍺','🍷','🥂','🍸','🧉','🍹'],
 };
 const EP_ALL = [...new Set(Object.values(EP_DB).flat())];
 let epCurrentCat = '🍽️';
@@ -8895,7 +8901,17 @@ function openEmojiPicker() {
   epPickerOpen = true;
   renderEpCats();
   renderEpGrid(EP_DB[epCurrentCat]);
-  document.getElementById('catEmojiPicker').classList.add('open');
+  const picker = document.getElementById('catEmojiPicker');
+  const btn    = document.getElementById('catEmojiBtnDisplay');
+  const btnRect = btn.getBoundingClientRect();
+  if (btnRect.top < 300) {
+    picker.style.bottom = 'auto';
+    picker.style.top    = (btn.offsetHeight + 8) + 'px';
+  } else {
+    picker.style.top    = 'auto';
+    picker.style.bottom = '74px';
+  }
+  picker.classList.add('open');
 }
 function closeEmojiPicker() {
   epPickerOpen = false;
@@ -9885,46 +9901,6 @@ async function pullFromSheets(sheetId, token) {
   updateRecycleBadge();
 }
 
-async function syncCategorySheets(sheetId, token) {
-  const categories = [...new Set(
-    recipes.filter(r => r.tags && r.tags.length > 0).map(r => r.tags[0])
-  )];
-  const meta = await sheetsReq('GET',
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets/properties`, token);
-  const allSheets = meta.sheets || [];
-  const titles    = allSheets.map(s => s.properties.title);
-  const SYSTEM    = [RECIPES_SHEET, RECYCLEBIN_SHEET];
-  const oldCats   = titles.filter(t => !SYSTEM.includes(t));
-  const toAdd     = categories.filter(c => !titles.includes(c));
-  const toRemove  = oldCats.filter(c => !categories.includes(c));
-
-  const newCatNumIds = {};
-  if (toAdd.length || toRemove.length) {
-    const requests = [
-      ...toRemove.map(title => ({
-        deleteSheet: { sheetId: allSheets.find(s => s.properties.title === title).properties.sheetId }
-      })),
-      ...toAdd.map(title => ({ addSheet: { properties: { title } } }))
-    ];
-    const resp = await sheetsReq('POST',
-      `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, token, { requests });
-    let addIdx = 0;
-    (resp.replies || []).forEach(reply => {
-      if (reply.addSheet) newCatNumIds[toAdd[addIdx++]] = reply.addSheet.properties.sheetId;
-    });
-  }
-
-  await Promise.all(categories.map(async cat => {
-    const rows = recipes.filter(r => r.tags?.[0] === cat).map(r => recipeToRow(r, false));
-    await clearAndWrite(sheetId, cat, [RECIPES_COLS, ...rows], token);
-    if (newCatNumIds[cat] !== undefined) {
-      await sheetsReq('POST', `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, token, {
-        requests: buildFormatRequests(newCatNumIds[cat], RECIPES_COLS.length)
-      });
-    }
-  }));
-}
-
 async function pushAllToSheets(token) {
   const sheetId = localStorage.getItem(SIMMER_SHEET_ID_KEY + currentUser.email);
   if (!sheetId) return;
@@ -9934,7 +9910,6 @@ async function pushAllToSheets(token) {
     clearAndWrite(sheetId, RECYCLEBIN_SHEET,
       [RECYCLEBIN_COLS, ...deletedRecipes.map(r => recipeToRow(r, true))], token),
   ]);
-  await syncCategorySheets(sheetId, token);
 }
 
 function syncAfterWrite() {

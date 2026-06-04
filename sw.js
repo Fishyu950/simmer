@@ -1,4 +1,4 @@
-const CACHE_NAME = 'simmer-v0.3';
+const CACHE_NAME = 'simmer-v0.4';
 self.addEventListener('install', e => {
   self.skipWaiting();
 });
