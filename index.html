@@ -365,6 +365,10 @@
   .toast { position:fixed; top:24px; left:50%; transform:translateX(-50%) translateY(-80px); background:var(--text); color:#fff; padding:12px 24px; border-radius:50px; font-size:14px; z-index:999; transition:transform .3s cubic-bezier(.34,1.3,.64,1); white-space:nowrap; letter-spacing:0.08em; }
   .toast.show { transform:translateX(-50%) translateY(0); }
 
+  /* SHEET LOST BANNER */
+  .sheet-lost-banner { display:none; position:fixed; top:0; left:50%; transform:translateX(-50%); width:100%; max-width:420px; background:#c62828; color:#fff; padding:10px 16px; text-align:center; font-size:13px; z-index:998; letter-spacing:0.05em; }
+  .sheet-lost-banner a { color:#fff; font-weight:700; text-decoration:underline; cursor:pointer; }
+
   /* SETTINGS PAGE */
   .settings-page { display:none; flex:1; overflow-y:auto; padding-bottom:120px; background:var(--bg); }
   .settings-page.active { display:block; }
@@ -8359,7 +8363,7 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
       </div>
 
       <!-- 版本 -->
-      <div class="settings-version">Simmer v0.4 · build 20260605</div>
+      <div class="settings-version">Simmer v0.5 · build 20260608</div>
     </div>
   </div>
 
@@ -8464,6 +8468,7 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
   </nav>
 
 <div class="toast" id="toast"></div>
+<div class="sheet-lost-banner" id="sheetLostBanner">⚠️ 試算表已遺失，<a onclick="rebuildSheet()">點此重新建立</a></div>
 
 <script>
 const DEFAULT_TAGS = ['家常菜','飲料','豆漿飲','湯品','台式早午餐'];
@@ -8480,75 +8485,6 @@ const RECYCLEBIN_SHEET     = 'RecycleBin';
 const RECIPES_COLS         = ['id','name','tags','url','ingredients','steps','notes','updatedAt'];
 const RECYCLEBIN_COLS      = ['id','name','tags','url','ingredients','steps','notes','updatedAt','deletedAt'];
 
-// ── 預設食譜資料 ──
-const SAMPLE_RECIPES = [
-  { id:1, name:'麻辣牛肉麵', url:'https://www.douyin.com', notes:'',
-    tags:['湯品'],
-    ingredients:[{n:'牛腩', qty:'300', unit:'g'},{n:'寬麵條', qty:'200', unit:'g'},{n:'豆瓣醬', qty:'2', unit:'大匙'},{n:'花椒', qty:'1', unit:'小匙'},{n:'乾辣椒', qty:'5', unit:'根'},{n:'醬油', qty:'2', unit:'大匙'}],
-    steps:['牛腩切塊汆燙去血水，撈起沖洗備用。','熱鍋炒香豆瓣醬、花椒、辣椒，炒出紅油。','加入牛腩翻炒上色，倒醬油拌勻。','加水淹過食材，小火燉 30 分鐘至軟爛。','煮好麵條，淋上牛肉湯即完成。'] },
-  { id:2, name:'番茄炒蛋', url:'', notes:'',
-    tags:['家常菜','快手料理'],
-    ingredients:[{n:'番茄', qty:'2', unit:'顆'},{n:'雞蛋', qty:'3', unit:'顆'},{n:'鹽', qty:'', unit:'適量'},{n:'糖', qty:'1', unit:'小匙'}],
-    steps:['番茄切塊；雞蛋加鹽打散。','熱鍋多油炒蛋至半熟盛起。','原鍋炒番茄至出汁，調味。','倒回雞蛋翻炒均勻起鍋。'] },
-  { id:3, name:'香酥脆皮雞翅', url:'', notes:'',
-    tags:['家常菜'],
-    ingredients:[{n:'雞翅', qty:'10', unit:'支'},{n:'醬油', qty:'2', unit:'大匙'},{n:'蜂蜜', qty:'1', unit:'大匙'},{n:'玉米粉', qty:'2', unit:'大匙'}],
-    steps:['雞翅劃刀醃製 20 分鐘。','裹上玉米粉。','氣炸鍋 200°C 炸 18 分鐘，中途翻面。'] },
-  { id:4, name:'古早味蒸蛋糕', url:'', notes:'',
-    tags:['甜點'],
-    ingredients:[{n:'雞蛋', qty:'4', unit:'顆'},{n:'低筋麵粉', qty:'100', unit:'g'},{n:'砂糖', qty:'80', unit:'g'},{n:'沙拉油', qty:'40', unit:'ml'},{n:'牛奶', qty:'40', unit:'ml'}],
-    steps:['蛋白加糖打發至硬性發泡。','蛋黃加油牛奶拌勻篩入麵粉。','蛋白分三次翻拌入蛋黃糊。','電鍋外鍋兩杯水蒸熟，倒扣放涼。'] },
-  { id:5, name:'蒜泥白肉', url:'', notes:'少放辣',
-    tags:['家常菜'],
-    ingredients:[{n:'豬五花', qty:'300', unit:'克'},{n:'小黃瓜', qty:'1', unit:'條'},{n:'蒜頭', qty:'5', unit:'瓣'},{n:'醬油', qty:'2', unit:'大匙'},{n:'辣油', qty:'1', unit:'小匙'}],
-    steps:['豬五花冷水下鍋，加薑片煮 20 分鐘至熟。','撈起放涼後切薄片。','小黃瓜拍扁切段墊底。','蒜頭磨泥加醬油、辣油調成醬汁。','淋上醬汁即完成。'] },
-  { id:6, name:'紅豆豆漿', url:'', notes:'',
-    tags:['豆漿飲'],
-    ingredients:[{n:'紅豆', qty:'100', unit:'克'},{n:'黃豆', qty:'150', unit:'克'},{n:'砂糖', qty:'30', unit:'克'},{n:'水', qty:'1000', unit:'毫升'}],
-    steps:['黃豆泡水 8 小時備用。','紅豆提前煮熟。','黃豆加水用豆漿機打成漿。','過濾後加入紅豆和糖煮滾即完成。'] },
-  { id:7, name:'薑母鴨', url:'', notes:'冬天必喝',
-    tags:['湯品'],
-    ingredients:[{n:'鴨肉', qty:'600', unit:'克'},{n:'老薑', qty:'100', unit:'克'},{n:'麻油', qty:'3', unit:'大匙'},{n:'米酒', qty:'300', unit:'毫升'},{n:'枸杞', qty:'20', unit:'克'}],
-    steps:['鴨肉切塊汆燙備用。','老薑切片用麻油爆香至微焦。','加入鴨肉大火翻炒上色。','倒入米酒和水，加枸杞小火燉 40 分鐘。'] },
-  { id:8, name:'台式蛋餅', url:'', notes:'',
-    tags:['台式早午餐'],
-    ingredients:[{n:'中筋麵粉', qty:'100', unit:'克'},{n:'雞蛋', qty:'2', unit:'顆'},{n:'蔥花', qty:'20', unit:'克'},{n:'鹽', qty:'', unit:'適量'},{n:'醬油膏', qty:'', unit:'適量'}],
-    steps:['麵粉加水調成麵糊，靜置 10 分鐘。','平底鍋刷油倒入麵糊攤成薄餅。','打入雞蛋撒蔥花，等蛋液半熟捲起。','切段後淋上醬油膏即完成。'] },
-  { id:9, name:'珍珠奶茶', url:'', notes:'',
-    tags:['飲料'],
-    ingredients:[{n:'紅茶包', qty:'2', unit:'個'},{n:'鮮奶', qty:'200', unit:'毫升'},{n:'木薯粉圓', qty:'80', unit:'克'},{n:'黑糖', qty:'2', unit:'大匙'},{n:'冰塊', qty:'', unit:'適量'}],
-    steps:['粉圓煮熟後加黑糖拌勻備用。','紅茶泡濃後放涼。','杯中加入粉圓和冰塊。','倒入紅茶和鮮奶攪拌均勻即完成。'] },
-  { id:10, name:'滷豬腳', url:'', notes:'',
-    tags:['家常菜'],
-    ingredients:[{n:'豬腳', qty:'600', unit:'克'},{n:'醬油', qty:'4', unit:'大匙'},{n:'冰糖', qty:'2', unit:'大匙'},{n:'八角', qty:'3', unit:'個'},{n:'米酒', qty:'2', unit:'大匙'}],
-    steps:['豬腳汆燙去腥備用。','鍋中炒香八角，加醬油、冰糖炒出醬色。','加入豬腳翻炒上色，倒入米酒和水。','小火滷 1 小時至軟爛入味。'] },
-  { id:11, name:'芋頭西米露', url:'', notes:'',
-    tags:['甜點'],
-    ingredients:[{n:'芋頭', qty:'200', unit:'克'},{n:'西米', qty:'60', unit:'克'},{n:'椰漿', qty:'200', unit:'毫升'},{n:'砂糖', qty:'40', unit:'克'}],
-    steps:['芋頭切丁蒸熟備用。','西米煮至透明撈起過冷水。','椰漿加糖煮滾後放涼。','加入芋頭和西米拌勻，冷藏後享用。'] },
-  { id:12, name:'香菇雞湯', url:'', notes:'',
-    tags:['湯品'],
-    ingredients:[{n:'雞腿', qty:'2', unit:'支'},{n:'乾香菇', qty:'8', unit:'朵'},{n:'薑片', qty:'4', unit:'片'},{n:'鹽', qty:'', unit:'適量'},{n:'米酒', qty:'1', unit:'大匙'}],
-    steps:['乾香菇泡發備用，雞腿汆燙去血水。','鍋中加水放入雞腿、香菇、薑片。','大火滾開後轉小火燉 30 分鐘。','加鹽和米酒調味即完成。'] },
-  { id:13, name:'滷蛋', url:'', notes:'', tags:['家常菜'],
-    ingredients:[{n:'雞蛋',qty:'6',unit:'顆'},{n:'醬油',qty:'3',unit:'大匙'},{n:'冰糖',qty:'1',unit:'大匙'},{n:'八角',qty:'2',unit:'顆'}],
-    steps:['雞蛋煮熟剝殼。','滷汁材料煮滾。','放入雞蛋小火滷 20 分鐘。','關火浸泡 1 小時入味。'] },
-  { id:14, name:'玉米排骨湯', url:'', notes:'', tags:['湯品'],
-    ingredients:[{n:'排骨',qty:'300',unit:'克'},{n:'玉米',qty:'1',unit:'根'},{n:'紅蘿蔔',qty:'1',unit:'條'},{n:'鹽',qty:'',unit:'適量'}],
-    steps:['排骨汆燙去血水。','玉米切段、紅蘿蔔切塊。','所有食材加水大火煮滾。','轉小火燉 40 分鐘加鹽調味。'] },
-  { id:15, name:'蔥油拌麵', url:'', notes:'', tags:['家常菜'],
-    ingredients:[{n:'陽春麵',qty:'2',unit:'份'},{n:'青蔥',qty:'4',unit:'支'},{n:'醬油',qty:'3',unit:'大匙'},{n:'豬油',qty:'2',unit:'大匙'}],
-    steps:['蔥切段用豬油小火炸至金黃撈起。','蔥油加醬油拌勻成醬汁。','麵條煮熟撈起，淋上醬汁拌勻。','撒上蔥酥即完成。'] },
-  { id:16, name:'麻婆豆腐', url:'', notes:'', tags:['家常菜'],
-    ingredients:[{n:'嫩豆腐',qty:'1',unit:'塊'},{n:'豬絞肉',qty:'100',unit:'克'},{n:'豆瓣醬',qty:'1',unit:'大匙'},{n:'花椒粉',qty:'',unit:'適量'}],
-    steps:['豆腐切塊汆燙備用。','熱鍋炒絞肉加豆瓣醬炒香。','加高湯煮滾放入豆腐。','勾芡後撒花椒粉即完成。'] },
-  { id:17, name:'南瓜濃湯', url:'', notes:'', tags:['湯品'],
-    ingredients:[{n:'南瓜',qty:'400',unit:'克'},{n:'洋蔥',qty:'半顆',unit:''},{n:'牛奶',qty:'200',unit:'ml'},{n:'奶油',qty:'1',unit:'大匙'}],
-    steps:['南瓜去皮切塊蒸熟。','洋蔥用奶油炒軟。','所有材料加牛奶用調理機打勻。','倒回鍋中加熱調味即完成。'] },
-  { id:18, name:'蜂蜜檸檬茶', url:'', notes:'', tags:['飲料'],
-    ingredients:[{n:'檸檬',qty:'1',unit:'顆'},{n:'蜂蜜',qty:'2',unit:'大匙'},{n:'溫水',qty:'300',unit:'ml'}],
-    steps:['檸檬榨汁。','加入蜂蜜和溫水攪拌均勻。','可加冰塊飲用。'] },
-];
 
 // ── localStorage 儲存鍵 ──
 const LS_RECIPES      = 'simmer_recipes';
@@ -9173,8 +9109,8 @@ function goAllPage(p) {
   }, 50);
 }
 
-let recipes = [...SAMPLE_RECIPES];
-let nextId = 19;
+let recipes = [];
+let nextId = 1;
 let currentEditId = null;
 // ── 回收桶（先宣告，loadFromStorage 才能存入）──
 let deletedRecipes = [];
@@ -9689,8 +9625,17 @@ async function syncToSheets() {
     showToast('☁️ 同步中…');
     const token   = await ensureToken();
     const sheetId = await ensureSheet(token);
+    // 確認試算表確實存在且可存取
+    let sheetOk = false;
+    try {
+      const check = await sheetsReq('GET',
+        `https://www.googleapis.com/drive/v3/files/${sheetId}?fields=id,trashed`, token);
+      sheetOk = !check.trashed;
+    } catch { /**/ }
+    if (!sheetOk) { showToast('同步失敗，試算表不存在'); return; }
     await pullFromSheets(sheetId, token);
     await pushAllToSheets(token);
+    hideSheetLostBanner();
     showToast('☁️ 同步完成');
   } catch(e) {
     console.error('[Simmer] sync error:', e);
@@ -9866,8 +9811,22 @@ async function ensureSheet(token) {
     } catch { /**/ }
     localStorage.removeItem(SIMMER_SHEET_ID_KEY + currentUser.email);
   }
-  // 找不到就建立新試算表
-  return createSimmerSpreadsheet(token);
+  // 試算表不存在 — 先備份本機資料，建立新試算表後立即還原
+  const localBackup = {
+    recipes: recipes.map(r => ({ ...r })),
+    deletedRecipes: deletedRecipes.map(r => ({ ...r })),
+  };
+  const newSheetId = await createSimmerSpreadsheet(token);
+  if (localBackup.recipes.length || localBackup.deletedRecipes.length) {
+    await Promise.all([
+      clearAndWrite(newSheetId, RECIPES_SHEET,
+        [RECIPES_COLS, ...localBackup.recipes.map(r => recipeToRow(r, false))], token),
+      clearAndWrite(newSheetId, RECYCLEBIN_SHEET,
+        [RECYCLEBIN_COLS, ...localBackup.deletedRecipes.map(r => recipeToRow(r, true))], token),
+    ]);
+    showToast('資料已自動還原至新試算表 ✓');
+  }
+  return newSheetId;
 }
 
 async function pullFromSheets(sheetId, token) {
@@ -9918,6 +9877,43 @@ function syncAfterWrite() {
     .then(tok => pushAllToSheets(tok))
     .catch(e => { console.warn('[Simmer] sync write failed:', e); showToast('☁️ 同步失敗，資料已存本機'); });
 }
+
+function showSheetLostBanner() {
+  document.getElementById('sheetLostBanner').style.display = '';
+}
+function hideSheetLostBanner() {
+  document.getElementById('sheetLostBanner').style.display = 'none';
+}
+
+async function verifySheetExists() {
+  if (!currentUser || !accessToken) return;
+  try {
+    const token   = await ensureToken();
+    const sheetId = localStorage.getItem(SIMMER_SHEET_ID_KEY + currentUser.email);
+    if (!sheetId) return;
+    const res = await sheetsReq('GET',
+      `https://www.googleapis.com/drive/v3/files/${sheetId}?fields=id,trashed`, token);
+    if (res.trashed) throw new Error('trashed');
+    hideSheetLostBanner();
+  } catch {
+    showSheetLostBanner();
+  }
+}
+
+async function rebuildSheet() {
+  if (!currentUser) return;
+  hideSheetLostBanner();
+  try {
+    const token = await ensureToken();
+    localStorage.removeItem(SIMMER_SHEET_ID_KEY + currentUser.email);
+    await ensureSheet(token);
+  } catch(e) {
+    console.error('[Simmer] rebuildSheet failed:', e);
+    showToast('重建失敗，請稍後再試');
+  }
+}
+
+setInterval(verifySheetExists, 5 * 60 * 1000);
 
 function cleanupOldDeleted() {
   const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
