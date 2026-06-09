@@ -8339,7 +8339,11 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
         <div class="settings-row" style="cursor:default">
           <img id="userAvatar" src="" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--border)">
           <div style="flex:1;min-width:0">
-            <div id="userName" style="font-size:15px;font-weight:700;color:var(--text);letter-spacing:0.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+            <div style="display:flex;align-items:center;gap:6px;overflow:hidden">
+              <div id="userName" style="font-size:15px;font-weight:700;color:var(--text);letter-spacing:0.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0"></div>
+              <button id="editNameBtn" onclick="editNickname()" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:2px;display:flex;align-items:center;flex-shrink:0;line-height:1" title="編輯暱稱"><span class="material-symbols-outlined" style="font-size:16px">edit</span></button>
+              <input id="userNameInput" style="display:none;flex:1;min-width:0;font-size:15px;font-weight:700;color:var(--text);letter-spacing:0.04em;border:none;border-bottom:1.5px solid var(--green);outline:none;background:transparent;font-family:'Noto Serif TC',serif;padding:0" onkeydown="handleNicknameKey(event)" onblur="saveNickname()">
+            </div>
             <div id="userEmail" style="font-size:12px;color:var(--muted);letter-spacing:0.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
           </div>
         </div>
@@ -8400,7 +8404,7 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
       </div>
 
       <!-- 版本 -->
-      <div class="settings-version">Simmer v0.7 · build 20260609</div>
+      <div class="settings-version">Simmer v0.8 · build 20260609</div>
     </div>
   </div>
 
@@ -9643,6 +9647,54 @@ function updateAuthUI() {
     document.getElementById('userEmail').textContent = currentUser.email;
     document.getElementById('userAvatar').src        = currentUser.avatar || '';
   }
+}
+
+// ── 暱稱行內編輯 ──
+let _nicknameCancelled = false;
+
+function editNickname() {
+  const nameEl = document.getElementById('userName');
+  const input  = document.getElementById('userNameInput');
+  const btn    = document.getElementById('editNameBtn');
+  input.value = nameEl.textContent;
+  nameEl.style.display = 'none';
+  btn.style.display    = 'none';
+  input.style.display  = '';
+  input.focus();
+  input.select();
+}
+
+function saveNickname() {
+  if (_nicknameCancelled) { _nicknameCancelled = false; return; }
+  const nameEl = document.getElementById('userName');
+  const input  = document.getElementById('userNameInput');
+  const btn    = document.getElementById('editNameBtn');
+  const newName = input.value.trim();
+  if (newName) {
+    nameEl.textContent = newName;
+    localStorage.setItem('simmer_user_name', newName);
+    if (currentUser) currentUser.name = newName;
+    updateHeaderUser(newName, null);
+    syncAfterWrite();
+  }
+  nameEl.style.display = '';
+  btn.style.display    = '';
+  input.style.display  = 'none';
+}
+
+function cancelNicknameEdit() {
+  _nicknameCancelled = true;
+  const nameEl = document.getElementById('userName');
+  const input  = document.getElementById('userNameInput');
+  const btn    = document.getElementById('editNameBtn');
+  nameEl.style.display = '';
+  btn.style.display    = '';
+  input.style.display  = 'none';
+}
+
+function handleNicknameKey(e) {
+  if (e.key === 'Enter')  { e.preventDefault(); document.getElementById('userNameInput').blur(); }
+  if (e.key === 'Escape') { cancelNicknameEdit(); }
 }
 
 // ── GSI 初始化 ──
