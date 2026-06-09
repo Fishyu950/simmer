@@ -380,6 +380,10 @@
   .sheet-lost-banner { display:none; position:fixed; top:0; left:50%; transform:translateX(-50%); width:100%; max-width:420px; background:#c62828; color:#fff; padding:10px 16px; text-align:center; font-size:13px; z-index:998; letter-spacing:0.05em; }
   .sheet-lost-banner a { color:#fff; font-weight:700; text-decoration:underline; cursor:pointer; }
 
+  /* RECONNECT BANNER */
+  .reconnect-banner { display:none; position:fixed; top:0; left:50%; transform:translateX(-50%); width:100%; max-width:420px; background:#e65100; color:#fff; padding:10px 16px; text-align:center; font-size:13px; z-index:997; letter-spacing:0.05em; }
+  .reconnect-banner a { color:#fff; font-weight:700; text-decoration:underline; cursor:pointer; }
+
   /* SETTINGS PAGE */
   .settings-page { display:none; flex:1; overflow-y:auto; padding-bottom:120px; background:var(--bg); }
   .settings-page.active { display:block; }
@@ -8512,6 +8516,7 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
 
 <div class="toast" id="toast"></div>
 <div class="sheet-lost-banner" id="sheetLostBanner">⚠️ 試算表已遺失，<a onclick="rebuildSheet()">點此重新建立</a></div>
+<div class="reconnect-banner" id="reconnectBanner">🔌 連線已中斷，<a onclick="googleLogin()">點此重新同步</a></div>
 
 <!-- 食譜 emoji picker（fixed，不受 editView overflow:hidden 限制）-->
 <div class="emoji-picker" id="recipeEmojiPicker" style="position:fixed;z-index:700">
@@ -9721,25 +9726,28 @@ function initGoogleAuth() {
         await pullFromSheets(sheetId, token);
         showToast('☁️ 雲端同步完成');
       } catch(e) { console.warn('[Simmer] startup sync failed:', e); }
-    }).catch(() => {});
+    }).catch(() => {
+      // 靜默還原失敗（session 已過期）→ 顯示重連提示，不跳視窗
+      showReconnectBanner();
+    });
   }
+}
+
+function showReconnectBanner() {
+  document.getElementById('reconnectBanner').style.display = '';
+}
+function hideReconnectBanner() {
+  document.getElementById('reconnectBanner').style.display = 'none';
 }
 
 function requestToken(promptVal = '') {
   return new Promise((resolve, reject) => {
     if (!googleTokenClient) { reject(new Error('GSI not ready')); return; }
-    const isSilent = !promptVal || promptVal === 'none';
-    let escalated = false;
     const handler = resp => {
       if (resp.error) { reject(new Error(resp.error)); return; }
-      if (!isSilent && resp.scope && !resp.scope.includes('drive.file') && !escalated) {
-        escalated = true;
-        googleTokenClient.callback = handler;
-        googleTokenClient.requestAccessToken({ prompt: 'consent' });
-        return;
-      }
       accessToken = resp.access_token;
       tokenExpiry = Date.now() + (resp.expires_in - 60) * 1000;
+      hideReconnectBanner();
       resolve(accessToken);
     };
     googleTokenClient.callback = handler;
@@ -9748,8 +9756,10 @@ function requestToken(promptVal = '') {
 }
 
 async function ensureToken() {
+  // 背景同步只用記憶體快取；過期時顯示提示讓使用者主動重連，不自動跳視窗
   if (accessToken && Date.now() < tokenExpiry) return accessToken;
-  return requestToken('');
+  showReconnectBanner();
+  throw new Error('token_expired');
 }
 
 // ── iOS OAuth redirect callback ──
@@ -9815,6 +9825,7 @@ async function googleLogin() {
     localStorage.setItem(SIMMER_AVATAR_KEY, currentUser.avatar);
     updateAuthUI();
     updateHeaderUser(currentUser.name, currentUser.avatar);
+    hideReconnectBanner();
     showToast('✅ 已登入 Google，正在初始化同步…');
     const sheetId = await ensureSheet(token);
     await pullFromSheets(sheetId, token);
@@ -9830,6 +9841,7 @@ function googleLogout() {
   currentUser = null;
   accessToken = null;
   tokenExpiry = 0;
+  hideReconnectBanner();
   localStorage.removeItem(SIMMER_EMAIL_KEY);
   localStorage.removeItem(SIMMER_NAME_KEY);
   localStorage.removeItem(SIMMER_AVATAR_KEY);
@@ -9856,6 +9868,7 @@ async function syncToSheets() {
     hideSheetLostBanner();
     showToast('☁️ 同步完成');
   } catch(e) {
+    if (e.message === 'token_expired') { showToast('連線已中斷，請點上方提示重新同步'); return; }
     console.error('[Simmer] sync error:', e);
     showToast('同步失敗，請稍後再試');
   }
@@ -10090,10 +10103,15 @@ async function pushAllToSheets(token) {
 }
 
 function syncAfterWrite() {
-  if (!currentUser || !accessToken) return;
+  if (!currentUser) return;
   ensureToken()
     .then(tok => pushAllToSheets(tok))
-    .catch(e => { console.warn('[Simmer] sync write failed:', e); showToast('☁️ 同步失敗，資料已存本機'); });
+    .catch(e => {
+      // token_expired → banner 已顯示，不再 toast
+      if (e.message === 'token_expired') return;
+      console.warn('[Simmer] sync write failed:', e);
+      showToast('☁️ 同步失敗，資料已存本機');
+    });
 }
 
 function showSheetLostBanner() {
@@ -10104,7 +10122,7 @@ function hideSheetLostBanner() {
 }
 
 async function verifySheetExists() {
-  if (!currentUser || !accessToken) return;
+  if (!currentUser) return;
   try {
     const token   = await ensureToken();
     const sheetId = localStorage.getItem(SIMMER_SHEET_ID_KEY + currentUser.email);
@@ -10113,7 +10131,8 @@ async function verifySheetExists() {
       `https://www.googleapis.com/drive/v3/files/${sheetId}?fields=id,trashed`, token);
     if (res.trashed) throw new Error('trashed');
     hideSheetLostBanner();
-  } catch {
+  } catch(e) {
+    if (e.message === 'token_expired') return; // banner 已顯示，不誤觸試算表遺失提示
     showSheetLostBanner();
   }
 }
@@ -10126,6 +10145,7 @@ async function rebuildSheet() {
     localStorage.removeItem(SIMMER_SHEET_ID_KEY + currentUser.email);
     await ensureSheet(token);
   } catch(e) {
+    if (e.message === 'token_expired') { showToast('連線已中斷，請點上方提示重新同步'); return; }
     console.error('[Simmer] rebuildSheet failed:', e);
     showToast('重建失敗，請稍後再試');
   }
