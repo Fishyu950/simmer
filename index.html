@@ -94,6 +94,7 @@
     position: relative;
     min-height: 90px;
     text-align: center;
+    overflow: hidden;
   }
   .folder-card:hover { transform:translateY(-2px); box-shadow:0 6px 18px var(--shadow); }
   .folder-add-card { background:transparent; border:2px dashed #709252; box-shadow:none; color:#709252; }
@@ -136,6 +137,8 @@
   .sel-btn-cancel { background:var(--surface); color:var(--text2); }
   .sel-btn-export { background:#709252; color:#fff; box-shadow:0 2px 8px rgba(32,40,8,0.08); }
   .sel-btn-export:disabled { background:var(--border); color:var(--muted); box-shadow:none; cursor:not-allowed; }
+  .sel-btn-delete { background:transparent; color:#c0392b; border:1.5px solid #c0392b; }
+  .sel-btn-delete:disabled { color:var(--muted); border-color:var(--border); cursor:not-allowed; }
   .card-body { padding:14px 14px 13px; }
   .recipe-name { font-size:16px; font-weight:700; color:#6A784D; letter-spacing:0.05em; line-height:1.35; margin-bottom:6px; }
   .cat-badge { display:inline-block; font-size:12px; padding:2px 9px; border-radius:50px; font-weight:600; letter-spacing:0.06em; background:#fab62d; color:#fff; margin-bottom:7px; }
@@ -8266,6 +8269,15 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
     <div class="edit-body">
 
       <div class="field-group">
+        <div class="field-label">食譜圖示</div>
+        <div class="ep-wrap" style="display:inline-block">
+          <button type="button" id="recipeEmojiBtnDisplay" onclick="toggleRecipeEmojiPicker(event)" style="font-size:32px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:6px 14px;cursor:pointer;line-height:1;transition:border-color .2s" title="選擇圖示">
+            <span id="recipeEmojiDisplay">🍽️</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="field-group">
         <div class="field-label">食譜名稱 <span>*</span></div>
         <input class="field-input" id="editName" type="text" placeholder="例如：番茄炒蛋">
       </div>
@@ -8314,9 +8326,20 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
     <div class="settings-body">
 
       <!-- 品牌區 -->
-      <div style="padding:28px 20px 20px; text-align:center;">
-        <div style="font-size:30px; font-weight:700; color:var(--text); letter-spacing:0.22em; margin-bottom:4px;">Simmer</div>
-        <div style="font-size:13px; color:#5a7a45; letter-spacing:0.15em; font-weight:400;">Slow down, cook more.</div>
+      <div style="padding:28px 20px 20px; display:flex; align-items:center; gap:14px; justify-content:center;">
+        <div style="width:64px; height:64px; border-radius:22px; overflow:hidden; flex-shrink:0;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="64" height="64">
+            <style>.st0{fill:#32422A}.st1{fill:#779A6C}.st2{fill:#FFFFFF}</style>
+            <rect class="st0" width="512" height="512"/>
+            <polygon class="st1" points="169.73,249.3 197.3,201.76 337.46,197.5 365.65,313.83 240.63,340.86 182.49,385.61 169.73,370.78"/>
+            <path class="st2" d="M259.52,177.71c-8.62-5.18-17.49-11.46-20.89-20.92c-2.94-8.18-1.07-17.69,4.03-24.72c5.1-7.03,12.3-14.05,21.65-13.45c9.35,0.6,13.01,4.59,14.51,8.34c2.61,6.51,5.6,15.32,1.5,30.41c-4.1,15.08-12.67,13.71-21.37,17.51"/>
+            <path class="st2" d="M394.8,177.34c-1.72-2.67-4.28-5.02-7.47-5.74c-3.12-0.71-6.91-0.65-9.63,1.26c-6.58,4.62-13.23,9.18-20.59,12.47c-0.78,0.3-1.57,0.59-2.36,0.87c0.31-3.72-1.51-7.6-4.26-10.25c-3.36-3.24-7.86-4.99-12.3-6.46c-18.2-6-54.7-9.92-58.43-10.24c-3.73-0.32-25.86-1.59-48.55,1.26c-22.69,2.85-54.85,17.83-77.16,35.77c-4.57,3.68-9.2,7.97-10.53,13.68c-1.27,5.45,0.87,11.17,4.62,15.4c-1.61-0.92-3.22-1.82-4.85-2.72c-3.96-2.17-7.97-4.25-12.01-6.26c-3.03-1.51-6.29-2.18-9.63-1.26c-2.9,0.8-6.04,3.04-7.47,5.74c-1.53,2.9-2.3,6.42-1.26,9.63c0.96,2.98,2.84,6.03,5.74,7.47c7.33,3.65,14.51,7.58,21.58,11.7c3.64,2.12,7.26,4.26,10.91,6.36c2.66,1.54,5.41,2.98,7.99,4.67c0.12,4.3,0.28,8.61,0.29,12.92c0.07,14.85-1.37,29.71-2.17,44.53c-0.85,15.89-1.41,31.81,0.76,47.62c0.84,6.11,2.36,12.19,5.38,17.63c4.94,8.87,15.3,15.35,25.6,14.66c5.71-0.38,10.92-2.08,15.91-4.87c4.09-2.28,7.81-5.27,11.36-8.3c2.58-2.21,5.06-4.56,7.5-6.92c4.1-3.98,7.52-8.63,10.92-13.2c1.13-1.52,2.26-3.04,3.41-4.56c2.43-3.04,5.03-5.93,7.99-8.46c2.93-2.12,6.07-3.89,9.36-5.37c10.89-4.2,22.61-5.67,34.11-7.28c14.81-2.07,29.62-4.14,44.44-6.21c7.41-1.03,14.81-2.07,22.22-3.1c2.83-0.4,5.73-0.6,8.43-1.6c3.33-1.23,6.57-2.77,9.03-5.44c2.19-2.39,4.03-5.31,4.69-8.53c0.73-3.59,0.64-6.69-0.2-10.28c-1.01-4.28-3.28-8.43-5.67-12.11c-2.43-3.74-5.18-7.26-7.86-10.82c-1.92-2.56-3.97-5.17-5.42-8.05c-2.56-6.63-4.03-13.63-5.06-20.65c-1.64-12.92-2.03-25.96-3.11-38.93c7.37-1.91,14.56-4.36,21.41-7.74c6.32-3.12,12.12-7.17,17.87-11.22c2.71-1.91,4.84-4.18,5.74-7.47C396.89,183.98,396.51,179.99,394.8,177.34zM327.84,308.74c-11.19,1.56-22.38,3.13-33.57,4.69c-10.01,1.4-20.1,2.54-30.02,4.53c-9.72,1.95-19.56,5.04-28.02,10.32c-5.2,3.25-9.94,7.29-13.91,11.95c-3.63,4.27-6.88,8.84-10.26,13.31c-4.38,5.49-9.47,10.52-14.95,14.93c-2.06,1.52-4.22,2.89-6.52,4.01c-0.7,0.24-1.41,0.44-2.12,0.61c-0.25,0.01-0.5,0.01-0.76,0c-0.12-0.03-0.24-0.06-0.37-0.1c-0.35-0.19-0.7-0.4-1.04-0.61c-0.29-0.26-0.57-0.54-0.84-0.82c-0.32-0.52-0.62-1.06-0.9-1.61c-1.04-2.91-1.69-5.95-2.17-9.01c-1.82-15.19-0.82-30.75,0.04-45.96c0.88-15.48,2.32-31.01,1.9-46.53c-0.11-4.1-0.27-8.23-0.32-12.35c0-0.04,0.01-0.07,0.01-0.11c0-0.1-0.02-0.19-0.02-0.28c-0.06-4.97,0.06-9.93,0.62-14.86c0.26-1.54,0.59-3.07,1.01-4.57c18.24,0.12,36.55-3.73,54.5-7.59c28.76-6.19,57.79-12.47,85.13-23.1c1.72,15.51,1.87,31.17,3.84,46.66c1.14,8.95,2.48,17.96,5.61,26.46c1.23,3.33,2.55,6.62,4.49,9.59c1.46,2.23,3.07,4.35,4.67,6.47c2.6,3.45,5.36,6.92,7.65,10.64c-2.31,0.32-4.61,0.64-6.92,0.97C339.03,307.18,333.44,307.96,327.84,308.74z"/>
+          </svg>
+        </div>
+        <div>
+          <div style="font-size:30px; font-weight:700; color:var(--text); letter-spacing:0.22em; margin-bottom:4px;">Simmer</div>
+          <div style="font-size:13px; color:#5a7a45; letter-spacing:0.15em; font-weight:400;">Slow down, cook more.</div>
+        </div>
       </div>
 
       <!-- 帳號區塊（登入後顯示） -->
@@ -8385,7 +8408,7 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
       </div>
 
       <!-- 版本 -->
-      <div class="settings-version">Simmer v0.5 · build 20260608</div>
+      <div class="settings-version">Simmer v0.7 · build 20260609</div>
     </div>
   </div>
 
@@ -8394,9 +8417,10 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
     <div class="view-top">
       <button class="view-back" onclick="closeRecycleBin()"><span class="material-symbols-outlined" style="font-size:22px">arrow_back</span></button>
       <span class="view-top-title">回收桶</span>
+      <button id="clearAllBinBtn" onclick="clearAllRecycleBin()" style="display:none;position:absolute;right:20px;background:transparent;border:none;color:var(--danger,#c0392b);font-size:14px;font-weight:600;font-family:'Noto Serif TC',serif;cursor:pointer;padding:4px 8px;border-radius:8px">清除全部</button>
     </div>
-    <div class="settings-body">
-      <div class="settings-section" id="recycleBinList">
+    <div class="settings-body" style="flex:1;overflow-y:auto">
+      <div class="settings-section" id="recycleBinList" style="overflow-y:auto;max-height:calc(100vh - 200px)">
         <div style="text-align:center;color:var(--muted);padding:40px 0;font-size:14px">回收桶是空的 🌿</div>
       </div>
       <button class="settings-row danger settings-section" id="emptyBinBtn" onclick="emptyRecycleBin()" style="display:none;border-radius:18px">
@@ -8462,6 +8486,7 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
     <div class="select-bar-left">已選 <span id="selCount">0</span> 道</div>
     <div class="select-bar-btns">
       <button class="sel-btn sel-btn-cancel" onclick="cancelSelect()">取消</button>
+      <button class="sel-btn sel-btn-delete" id="deleteSelectedBtn" onclick="deleteSelected()" disabled>刪除</button>
       <button class="sel-btn sel-btn-export" id="exportBtn" onclick="exportExcel()" disabled>匯出 .xlsx</button>
     </div>
   </div>
@@ -8491,6 +8516,15 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
 
 <div class="toast" id="toast"></div>
 <div class="sheet-lost-banner" id="sheetLostBanner">⚠️ 試算表已遺失，<a onclick="rebuildSheet()">點此重新建立</a></div>
+
+<!-- 食譜 emoji picker（fixed，不受 editView overflow:hidden 限制）-->
+<div class="emoji-picker" id="recipeEmojiPicker" style="position:fixed;z-index:700">
+  <div class="ep-search">
+    <input type="text" id="recipeEpSearchInput" placeholder="搜尋…" oninput="recipeEpSearch(this.value)">
+  </div>
+  <div class="ep-cats" id="recipeEpCats"></div>
+  <div class="ep-grid" id="recipeEpGrid"></div>
+</div>
 
 <script>
 const DEFAULT_TAGS = ['家常菜','飲料','豆漿飲','湯品','台式早午餐'];
@@ -8798,6 +8832,7 @@ function openEditCat(tag) {
 
 function closeCatModal(e) {
   if (e && e.target !== document.getElementById('catModalOverlay')) return;
+  closeEmojiPicker();
   document.getElementById('catModalOverlay').classList.remove('open');
 }
 
@@ -8857,6 +8892,7 @@ function toggleEmojiPicker(e) {
 }
 function openEmojiPicker() {
   epPickerOpen = true;
+  document.body.style.overflow = 'hidden';
   renderEpCats();
   renderEpGrid(EP_DB[epCurrentCat]);
   const picker = document.getElementById('catEmojiPicker');
@@ -8873,6 +8909,7 @@ function openEmojiPicker() {
 }
 function closeEmojiPicker() {
   epPickerOpen = false;
+  document.body.style.overflow = '';
   document.getElementById('catEmojiPicker').classList.remove('open');
 }
 document.addEventListener('click', e => {
@@ -8881,6 +8918,74 @@ document.addEventListener('click', e => {
   const btn = document.getElementById('catEmojiBtnDisplay');
   if (picker && !picker.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
     closeEmojiPicker();
+  }
+});
+
+// ── 食譜 emoji picker ──
+let recipeSelectedEmoji = '🍽️';
+let recipeEpPickerOpen = false;
+let recipeEpCurrentCat = '';
+
+function toggleRecipeEmojiPicker(e) {
+  e.stopPropagation();
+  recipeEpPickerOpen ? closeRecipeEmojiPicker() : openRecipeEmojiPicker();
+}
+function openRecipeEmojiPicker() {
+  recipeEpPickerOpen = true;
+  document.body.style.overflow = 'hidden';
+  if (!recipeEpCurrentCat) recipeEpCurrentCat = Object.keys(EP_DB)[0];
+  renderRecipeEpCats();
+  renderRecipeEpGrid(EP_DB[recipeEpCurrentCat]);
+  const picker = document.getElementById('recipeEmojiPicker');
+  const btn    = document.getElementById('recipeEmojiBtnDisplay');
+  const r      = btn.getBoundingClientRect();
+  const pickerH = 320;
+  if (r.bottom + pickerH > window.innerHeight) {
+    picker.style.top    = (r.top - pickerH - 6) + 'px';
+  } else {
+    picker.style.top    = (r.bottom + 6) + 'px';
+  }
+  picker.style.left = Math.min(r.left, window.innerWidth - 296) + 'px';
+  picker.classList.add('open');
+}
+function closeRecipeEmojiPicker() {
+  recipeEpPickerOpen = false;
+  document.body.style.overflow = '';
+  document.getElementById('recipeEmojiPicker').classList.remove('open');
+}
+function renderRecipeEpCats() {
+  document.getElementById('recipeEpCats').innerHTML = Object.keys(EP_DB).map(cat =>
+    `<button class="ep-cat ${cat===recipeEpCurrentCat?'active':''}" onclick="recipeEpSelectCat(event,'${cat}')">${cat}</button>`
+  ).join('');
+}
+function renderRecipeEpGrid(list) {
+  document.getElementById('recipeEpGrid').innerHTML = list.length
+    ? list.map(em => `<button class="ep-item" onclick="recipeEpPickEmoji(event,'${em}')">${em}</button>`).join('')
+    : '<div class="ep-empty">找不到</div>';
+}
+function recipeEpSelectCat(e, cat) {
+  e.stopPropagation();
+  recipeEpCurrentCat = cat;
+  renderRecipeEpCats();
+  renderRecipeEpGrid(EP_DB[cat]);
+  document.getElementById('recipeEpSearchInput').value = '';
+}
+function recipeEpPickEmoji(e, em) {
+  e.stopPropagation();
+  recipeSelectedEmoji = em;
+  document.getElementById('recipeEmojiDisplay').textContent = em;
+  closeRecipeEmojiPicker();
+}
+function recipeEpSearch(q) {
+  if (!q.trim()) { renderRecipeEpGrid(EP_DB[recipeEpCurrentCat]); return; }
+  renderRecipeEpGrid(EP_ALL.slice(0, 56));
+}
+document.addEventListener('click', e => {
+  if (!recipeEpPickerOpen) return;
+  const picker = document.getElementById('recipeEmojiPicker');
+  const btn    = document.getElementById('recipeEmojiBtnDisplay');
+  if (picker && !picker.contains(e.target) && btn && !btn.contains(e.target)) {
+    closeRecipeEmojiPicker();
   }
 });
 
@@ -8910,6 +9015,7 @@ function confirmCatModal() {
     catEmojis[name] = catSelectedEmoji;
     showToast('✅ 已更新分類');
   }
+  closeEmojiPicker();
   document.getElementById('catModalOverlay').classList.remove('open');
   saveToStorage();
   renderFolderGrid();
@@ -8931,6 +9037,7 @@ function deleteCatModal() {
   allTags = allTags.filter(t => t !== tag);
   delete catEmojis[tag];
   recipes.forEach(r => { if (r.tags && r.tags[0] === tag) r.tags = []; });
+  closeEmojiPicker();
   document.getElementById('catModalOverlay').classList.remove('open');
   saveToStorage();
   renderFolderGrid();
@@ -8995,6 +9102,26 @@ function updateSelectBar() {
   const n = selectedIds.size;
   document.getElementById('selCount').textContent = n;
   document.getElementById('exportBtn').disabled = n === 0;
+  document.getElementById('deleteSelectedBtn').disabled = n === 0;
+}
+
+function deleteSelected() {
+  const n = selectedIds.size;
+  if (!n) return;
+  if (!confirm(`確定要將選取的 ${n} 道食譜移入回收桶？`)) return;
+  const now = new Date().toISOString();
+  selectedIds.forEach(id => {
+    const idx = recipes.findIndex(r => r.id === id);
+    if (idx < 0) return;
+    deletedRecipes.unshift({ ...recipes[idx], deletedAt: now });
+    recipes.splice(idx, 1);
+  });
+  updateRecycleBadge();
+  saveToStorage();
+  syncAfterWrite();
+  refreshHome();
+  cancelSelect();
+  showToast('已移入回收桶');
 }
 
 // ── EXPORT XLSX ──
@@ -9191,6 +9318,8 @@ function openEdit(id) {
     ? { id:null, name:'', url:'', notes:'', tags:[], ingredients:[], steps:[] }
     : recipes.find(x => x.id === id);
   currentEditId = id || null;
+  recipeSelectedEmoji = r.emoji || '🍽️';
+  document.getElementById('recipeEmojiDisplay').textContent = recipeSelectedEmoji;
   document.getElementById('editName').value = r.name;
   document.getElementById('editUrl').value = r.url || '';
   renderTagPicker(r.tags && r.tags.length ? r.tags[0] : '');
@@ -9209,6 +9338,7 @@ function confirmCloseEdit() {
 }
 
 function closeEdit() {
+  closeRecipeEmojiPicker();
   document.getElementById('editView').classList.remove('open');
   editOriginalSnapshot = '';
 }
@@ -9342,8 +9472,9 @@ function saveRecipe() {
   const selectedTag = selectedTagBtn ? selectedTagBtn.dataset.tag : '';
   const data = {
     name,
-    time: document.getElementById('editTime').value.trim(),
-    servings: document.getElementById('editServings').value.trim(),
+    time: document.getElementById('editTime')?.value.trim() || '',
+    servings: document.getElementById('editServings')?.value.trim() || '',
+    emoji: recipeSelectedEmoji,
     url,
     notes: document.getElementById('editNotes').value.trim(),
     src: url.includes('douyin') ? '抖音' : url.includes('weixin') || url.includes('wx') ? '微信' : '手動',
@@ -9962,12 +10093,15 @@ function closeRecycleBin() {
 function renderRecycleBin() {
   const el = document.getElementById('recycleBinList');
   const emptyBtn = document.getElementById('emptyBinBtn');
+  const clearAllBtn = document.getElementById('clearAllBinBtn');
   if (!deletedRecipes.length) {
     el.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px 0;font-size:14px">回收桶是空的 🌿</div>';
     emptyBtn.style.display = 'none';
+    if (clearAllBtn) clearAllBtn.style.display = 'none';
     return;
   }
   emptyBtn.style.display = 'flex';
+  if (clearAllBtn) clearAllBtn.style.display = '';
   el.innerHTML = deletedRecipes.map((r, i) => `
     <div class="settings-row" style="${i < deletedRecipes.length-1 ? '' : 'border-bottom:none'}">
       <span class="settings-row-icon">🍽</span>
@@ -10008,6 +10142,17 @@ function restoreRecipe(id) {
 function emptyRecycleBin() {
   if (!deletedRecipes.length) return;
   if (!confirm(`確定要永久刪除 ${deletedRecipes.length} 道食譜？此操作無法復原。`)) return;
+  deletedRecipes = [];
+  updateRecycleBadge();
+  saveToStorage();
+  syncAfterWrite();
+  renderRecycleBin();
+  showToast('🗑 回收桶已清空');
+}
+
+function clearAllRecycleBin() {
+  if (!deletedRecipes.length) return;
+  if (!confirm('確定要永久刪除所有回收桶內容？')) return;
   deletedRecipes = [];
   updateRecycleBadge();
   saveToStorage();
