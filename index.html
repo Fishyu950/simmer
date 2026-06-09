@@ -8269,15 +8269,6 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
     <div class="edit-body">
 
       <div class="field-group">
-        <div class="field-label">食譜圖示</div>
-        <div class="ep-wrap" style="display:inline-block">
-          <button type="button" id="recipeEmojiBtnDisplay" onclick="toggleRecipeEmojiPicker(event)" style="font-size:32px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:6px 14px;cursor:pointer;line-height:1;transition:border-color .2s" title="選擇圖示">
-            <span id="recipeEmojiDisplay">🍽️</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="field-group">
         <div class="field-label">食譜名稱 <span>*</span></div>
         <input class="field-input" id="editName" type="text" placeholder="例如：番茄炒蛋">
       </div>
@@ -8286,6 +8277,7 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
         <div class="field-label">分類標籤 <span>*</span></div>
         <div class="tag-picker" id="tagPicker"></div>
         <div class="tag-add-wrap">
+          <button type="button" id="tagAddEmojiBtn" onclick="toggleTagAddEmojiPicker(event)" style="width:38px;height:38px;flex-shrink:0;font-size:18px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;transition:border-color .2s">🍽️</button>
           <input class="tag-add-input" id="tagAddInput" placeholder="自訂新標籤…" onkeydown="if(event.key==='Enter')addCustomTag()">
           <button class="tag-add-btn" onclick="addCustomTag()">新增</button>
         </div>
@@ -8923,28 +8915,33 @@ document.addEventListener('click', e => {
 
 // ── 食譜 emoji picker ──
 let recipeSelectedEmoji = '🍽️';
+let customTagEmoji = '🍽️';
+let epTargetMode = 'recipe'; // 'recipe' | 'tagAdd'
 let recipeEpPickerOpen = false;
 let recipeEpCurrentCat = '';
 
+function toggleTagAddEmojiPicker(e) {
+  e.stopPropagation();
+  if (recipeEpPickerOpen && epTargetMode === 'tagAdd') { closeRecipeEmojiPicker(); return; }
+  epTargetMode = 'tagAdd';
+  openSharedEmojiPicker(document.getElementById('tagAddEmojiBtn'));
+}
 function toggleRecipeEmojiPicker(e) {
   e.stopPropagation();
-  recipeEpPickerOpen ? closeRecipeEmojiPicker() : openRecipeEmojiPicker();
+  if (recipeEpPickerOpen && epTargetMode === 'recipe') { closeRecipeEmojiPicker(); return; }
+  epTargetMode = 'recipe';
+  openSharedEmojiPicker(document.getElementById('recipeEmojiBtnDisplay'));
 }
-function openRecipeEmojiPicker() {
+function openSharedEmojiPicker(triggerBtn) {
   recipeEpPickerOpen = true;
   document.body.style.overflow = 'hidden';
   if (!recipeEpCurrentCat) recipeEpCurrentCat = Object.keys(EP_DB)[0];
   renderRecipeEpCats();
   renderRecipeEpGrid(EP_DB[recipeEpCurrentCat]);
   const picker = document.getElementById('recipeEmojiPicker');
-  const btn    = document.getElementById('recipeEmojiBtnDisplay');
-  const r      = btn.getBoundingClientRect();
+  const r = triggerBtn.getBoundingClientRect();
   const pickerH = 320;
-  if (r.bottom + pickerH > window.innerHeight) {
-    picker.style.top    = (r.top - pickerH - 6) + 'px';
-  } else {
-    picker.style.top    = (r.bottom + 6) + 'px';
-  }
+  picker.style.top  = (r.bottom + pickerH > window.innerHeight) ? (r.top - pickerH - 6) + 'px' : (r.bottom + 6) + 'px';
   picker.style.left = Math.min(r.left, window.innerWidth - 296) + 'px';
   picker.classList.add('open');
 }
@@ -8972,8 +8969,15 @@ function recipeEpSelectCat(e, cat) {
 }
 function recipeEpPickEmoji(e, em) {
   e.stopPropagation();
-  recipeSelectedEmoji = em;
-  document.getElementById('recipeEmojiDisplay').textContent = em;
+  if (epTargetMode === 'tagAdd') {
+    customTagEmoji = em;
+    const btn = document.getElementById('tagAddEmojiBtn');
+    if (btn) btn.textContent = em;
+  } else {
+    recipeSelectedEmoji = em;
+    const el = document.getElementById('recipeEmojiDisplay');
+    if (el) el.textContent = em;
+  }
   closeRecipeEmojiPicker();
 }
 function recipeEpSearch(q) {
@@ -8982,11 +8986,13 @@ function recipeEpSearch(q) {
 }
 document.addEventListener('click', e => {
   if (!recipeEpPickerOpen) return;
-  const picker = document.getElementById('recipeEmojiPicker');
-  const btn    = document.getElementById('recipeEmojiBtnDisplay');
-  if (picker && !picker.contains(e.target) && btn && !btn.contains(e.target)) {
-    closeRecipeEmojiPicker();
-  }
+  const picker  = document.getElementById('recipeEmojiPicker');
+  const btnR    = document.getElementById('recipeEmojiBtnDisplay');
+  const btnT    = document.getElementById('tagAddEmojiBtn');
+  const inPicker = picker && picker.contains(e.target);
+  const inBtnR   = btnR && btnR.contains(e.target);
+  const inBtnT   = btnT && btnT.contains(e.target);
+  if (!inPicker && !inBtnR && !inBtnT) closeRecipeEmojiPicker();
 });
 
 function updateCatPreview() {
@@ -9319,7 +9325,9 @@ function openEdit(id) {
     : recipes.find(x => x.id === id);
   currentEditId = id || null;
   recipeSelectedEmoji = r.emoji || '🍽️';
-  document.getElementById('recipeEmojiDisplay').textContent = recipeSelectedEmoji;
+  customTagEmoji = '🍽️';
+  const tagEmojiBtn = document.getElementById('tagAddEmojiBtn');
+  if (tagEmojiBtn) tagEmojiBtn.textContent = '🍽️';
   document.getElementById('editName').value = r.name;
   document.getElementById('editUrl').value = r.url || '';
   renderTagPicker(r.tags && r.tags.length ? r.tags[0] : '');
@@ -9344,9 +9352,10 @@ function closeEdit() {
 }
 
 function renderTagPicker(selected) {
-  document.getElementById('tagPicker').innerHTML = allTags.map(t => `
-    <button type="button" class="tag-pick-btn${t===selected?' selected':''}" data-tag="${t}" onclick="selectTag(this)">${t}</button>
-  `).join('');
+  document.getElementById('tagPicker').innerHTML = allTags.map(t => {
+    const em = catEmojis[t] || FOLDER_ICONS[t] || '';
+    return `<button type="button" class="tag-pick-btn${t===selected?' selected':''}" data-tag="${t}" onclick="selectTag(this)">${em ? em + ' ' : ''}${t}</button>`;
+  }).join('');
 }
 
 function selectTag(btn) {
@@ -9360,11 +9369,15 @@ function addCustomTag() {
   if (!val) return;
   if (!allTags.includes(val)) {
     allTags.push(val);
+    catEmojis[val] = customTagEmoji;
     saveToStorage();
     renderFolderGrid(); // 同步到分類頁
   }
   renderTagPicker(val);
   inp.value = '';
+  customTagEmoji = '🍽️';
+  const btn = document.getElementById('tagAddEmojiBtn');
+  if (btn) btn.textContent = '🍽️';
 }
 
 function refreshHome() {
