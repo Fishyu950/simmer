@@ -95,6 +95,10 @@
     min-height: 90px;
     text-align: center;
     overflow: visible;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
+    -webkit-user-select: none;
   }
   .folder-card:hover { transform:translateY(-2px); box-shadow:0 6px 18px var(--shadow); }
   .folder-add-card { background:transparent; border:2px dashed #709252; box-shadow:none; color:#709252; }
@@ -120,7 +124,7 @@
   .recipe-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:0 16px; }
   @keyframes riseIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
 
-  .recipe-card { background:var(--card); border:2px solid transparent; border-radius:16px; cursor:pointer; transition:all .22s; box-shadow:0 2px 10px var(--shadow); overflow:hidden; animation:riseIn .45s ease both; position:relative; }
+  .recipe-card { background:var(--card); border:2px solid transparent; border-radius:16px; cursor:pointer; transition:all .22s; box-shadow:0 2px 10px var(--shadow); overflow:hidden; animation:riseIn .45s ease both; position:relative; -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none; user-select:none; -webkit-user-select:none; }
   .recipe-card:hover { transform:translateY(-2px); box-shadow:0 6px 18px var(--shadow); }
   .recipe-card.selected { border-color:#709252; box-shadow:0 2px 14px rgba(32,40,8,0.08); }
   .recipe-card.selected .card-check { opacity:1; }
@@ -8408,7 +8412,7 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
       </div>
 
       <!-- 版本 -->
-      <div class="settings-version">Simmer v0.9 · build 20260628</div>
+      <div class="settings-version">Simmer v1.0 · build 20260628</div>
     </div>
   </div>
 
@@ -9798,10 +9802,8 @@ async function handleOAuthCallback() {
     localStorage.setItem(SIMMER_AVATAR_KEY, currentUser.avatar);
     updateAuthUI();
     updateHeaderUser(currentUser.name, currentUser.avatar);
-    showToast('✅ 已登入 Google，正在初始化同步…');
-    const sheetId = await ensureSheet(tok);
-    await pullFromSheets(sheetId, tok);
-    showToast('☁️ 雲端同步完成');
+    showToast('✅ 已登入 Google');
+    await syncToSheets();
   } catch(e) {
     console.error('[Simmer] OAuth callback error:', e);
     showToast('Google 登入失敗');
@@ -9839,10 +9841,8 @@ async function googleLogin() {
     updateAuthUI();
     updateHeaderUser(currentUser.name, currentUser.avatar);
     hideReconnectBanner();
-    showToast('✅ 已登入 Google，正在初始化同步…');
-    const sheetId = await ensureSheet(token);
-    await pullFromSheets(sheetId, token);
-    showToast('☁️ 雲端同步完成');
+    showToast('✅ 已登入 Google');
+    await syncToSheets();
   } catch(e) {
     console.error('[Simmer] login error:', e);
     showToast('Google 登入失敗，請再試一次');
