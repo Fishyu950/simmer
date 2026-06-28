@@ -68,7 +68,7 @@
 
   /* ── PAGE TABS ── */
   .page-tabs { display:flex; gap:0; margin:16px 20px 0; background:rgba(255,255,255,0.75); border-radius:999px; padding:4px; }
-  .page-tab { flex:1; padding:10px 0; border:none; border-radius:999px; background:transparent; font-family:'Noto Serif TC',serif; font-size:16px; font-weight:600; color:#4a6035; cursor:pointer; transition:all .22s; letter-spacing:0.06em; }
+  .page-tab { flex:1; padding:10px 0; border:none; border-radius:999px; background:transparent; font-family:'Noto Serif TC',serif; font-size:16px; font-weight:600; color:#4a6035; cursor:pointer; transition:background-color .15s, color .15s; letter-spacing:0.06em; }
   .page-tab.active { background:#709252; color:#fff; box-shadow:0 2px 6px rgba(32,40,8,0.15); }
 
   /* ── TAB PANELS ── */
@@ -94,7 +94,7 @@
     position: relative;
     min-height: 90px;
     text-align: center;
-    overflow: hidden;
+    overflow: visible;
   }
   .folder-card:hover { transform:translateY(-2px); box-shadow:0 6px 18px var(--shadow); }
   .folder-add-card { background:transparent; border:2px dashed #709252; box-shadow:none; color:#709252; }
@@ -247,9 +247,9 @@
   .tag-pick-btn:hover { border-color:#6A784D; color:#6A784D; }
   .tag-pick-btn.selected { background:#6A784D; color:#fff; border-color:#6A784D; font-weight:600; }
   .tag-add-wrap { display:flex; gap:8px; margin-top:4px; }
-  .tag-add-input { flex:1; background:var(--card); border:1.5px solid var(--border); border-radius:12px; padding:10px 14px; font-family:'Noto Serif TC',serif; font-size:14px; color:var(--text); outline:none; box-shadow:0 1px 4px var(--shadow); letter-spacing:0.06em; }
+  .tag-add-input { flex:1; min-width:0; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:10px 14px; font-family:'Noto Serif TC',serif; font-size:14px; color:var(--text); outline:none; letter-spacing:0.06em; }
   .tag-add-input::placeholder { color:var(--muted); }
-  .tag-add-btn { background:#6A784D; color:white; border:none; border-radius:12px; padding:10px 16px; font-family:'Noto Serif TC',serif; font-size:14px; font-weight:600; cursor:pointer; white-space:nowrap; box-shadow:0 2px 8px rgba(32,40,8,0.08); }
+  .tag-add-btn { background:#6A784D; color:white; border:none; border-radius:12px; padding:10px 16px; font-family:'Noto Serif TC',serif; font-size:14px; font-weight:600; cursor:pointer; white-space:nowrap; flex-shrink:0; box-shadow:0 2px 8px rgba(32,40,8,0.08); }
   .tag-add-btn:hover { background:#33432B; }
 
   .steps-list { display:flex; flex-direction:column; gap:10px; }
@@ -312,7 +312,7 @@
 
   /* ── EMOJI PICKER ── */
   .ep-wrap { position:relative; }
-  .emoji-picker { display:none; position:absolute; bottom:74px; left:0; background:var(--card); border-radius:20px; box-shadow:0 8px 32px rgba(32,40,8,0.12); width:288px; z-index:600; overflow:hidden; flex-direction:column; border:1px solid var(--border); }
+  .emoji-picker { display:none; position:fixed; background:var(--card); border-radius:20px; box-shadow:0 8px 32px rgba(32,40,8,0.12); width:min(320px,90vw); height:280px; z-index:700; overflow:hidden; flex-direction:column; border:1px solid var(--border); }
   .emoji-picker.open { display:flex; flex-direction:column; }
   .ep-search { padding:10px 10px 8px; border-bottom:1px solid var(--border); flex-shrink:0; }
   .ep-search input { width:100%; border:1.5px solid var(--border); border-radius:10px; padding:7px 12px; font-size:14px; font-family:'Noto Serif TC',serif; outline:none; background:var(--surface); color:var(--text); transition:border-color .2s; }
@@ -322,7 +322,7 @@
   .ep-cat { font-size:18px; padding:4px 7px; border-radius:8px; cursor:pointer; transition:background .15s; border:none; background:transparent; }
   .ep-cat:hover { background:var(--surface); }
   .ep-cat.active { background:var(--green-bg); }
-  .ep-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; padding:8px; overflow-y:auto; max-height:180px; scrollbar-width:thin; }
+  .ep-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; padding:8px; overflow-y:auto; flex:1; scrollbar-width:thin; }
   .ep-item { font-size:22px; padding:5px 2px; border-radius:8px; cursor:pointer; text-align:center; transition:all .12s; border:none; background:transparent; line-height:1.3; }
   .ep-item:hover { background:var(--green-bg); transform:scale(1.15); }
   .ep-empty { grid-column:1/-1; text-align:center; color:var(--muted); font-size:13px; padding:16px 0; }
@@ -8408,7 +8408,7 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
       </div>
 
       <!-- 版本 -->
-      <div class="settings-version">Simmer v0.8 · build 20260609</div>
+      <div class="settings-version">Simmer v0.9 · build 20260628</div>
     </div>
   </div>
 
@@ -8458,14 +8458,6 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
           <div>
             <div class="cat-emoji-hint-title">點左邊圖示更換</div>
             <div class="cat-emoji-hint-sub">從選擇器挑選 emoji 🎉</div>
-          </div>
-          <!-- Emoji Picker Popup -->
-          <div class="emoji-picker" id="catEmojiPicker">
-            <div class="ep-search">
-              <input type="text" id="epSearchInput" placeholder="搜尋…" oninput="epSearch(this.value)">
-            </div>
-            <div class="ep-cats" id="epCats"></div>
-            <div class="ep-grid" id="epGrid"></div>
           </div>
         </div>
       </div>
@@ -8517,6 +8509,15 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
 <div class="toast" id="toast"></div>
 <div class="sheet-lost-banner" id="sheetLostBanner">⚠️ 試算表已遺失，<a onclick="rebuildSheet()">點此重新建立</a></div>
 <div class="reconnect-banner" id="reconnectBanner">🔌 連線已中斷，<a onclick="googleLogin()">點此重新同步</a></div>
+
+<!-- 分類 emoji picker（fixed，移出 cat-modal 避免 transform stacking context 影響定位）-->
+<div class="emoji-picker" id="catEmojiPicker" style="position:fixed;z-index:700">
+  <div class="ep-search">
+    <input type="text" id="epSearchInput" placeholder="搜尋…" oninput="epSearch(this.value)">
+  </div>
+  <div class="ep-cats" id="epCats"></div>
+  <div class="ep-grid" id="epGrid"></div>
+</div>
 
 <!-- 食譜 emoji picker（fixed，不受 editView overflow:hidden 限制）-->
 <div class="emoji-picker" id="recipeEmojiPicker" style="position:fixed;z-index:700">
@@ -8888,24 +8889,26 @@ function epSearch(q) {
   renderEpGrid(EP_ALL.slice(0, 56));
 }
 function toggleEmojiPicker(e) {
+  e.preventDefault();
   e.stopPropagation();
   epPickerOpen ? closeEmojiPicker() : openEmojiPicker();
 }
 function openEmojiPicker() {
   epPickerOpen = true;
-  document.body.style.overflow = 'hidden';
   renderEpCats();
   renderEpGrid(EP_DB[epCurrentCat]);
   const picker = document.getElementById('catEmojiPicker');
   const btn    = document.getElementById('catEmojiBtnDisplay');
-  const btnRect = btn.getBoundingClientRect();
-  if (btnRect.top < 300) {
-    picker.style.bottom = 'auto';
-    picker.style.top    = (btn.offsetHeight + 8) + 'px';
-  } else {
-    picker.style.top    = 'auto';
-    picker.style.bottom = '74px';
-  }
+  const r = btn.getBoundingClientRect();
+  const pickerH = 280;
+  const pickerW = Math.min(320, window.innerWidth * 0.9);
+  const top = (r.bottom + pickerH > window.innerHeight)
+    ? Math.max(8, r.top - pickerH - 6)
+    : r.bottom + 6;
+  const left = Math.min(r.left, window.innerWidth - pickerW - 8);
+  picker.style.top  = top + 'px';
+  picker.style.left = Math.max(8, left) + 'px';
+  picker.style.bottom = 'auto';
   picker.classList.add('open');
 }
 function closeEmojiPicker() {
@@ -9344,7 +9347,8 @@ function openEdit(id) {
   renderIngrEditor(r.ingredients.length ? r.ingredients : [{n:'', qty:'', unit:'克'}]);
   renderStepsEditor(r.steps.length ? r.steps : ['']);
   document.getElementById('editView').classList.add('open');
-  document.getElementById('editView').scrollTop = 0;
+  const _eb = document.getElementById('editView').querySelector('.edit-body');
+  if (_eb) _eb.scrollTop = 0;
   document.querySelector('.bottom-nav').style.display = '';
   // 記錄初始快照，用於離開確認
   setTimeout(() => { editOriginalSnapshot = getEditSnapshot(); }, 50);
