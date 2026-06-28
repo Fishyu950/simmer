@@ -9709,7 +9709,7 @@ function handleNicknameKey(e) {
 // ── GSI 初始化 ──
 function initGoogleAuth() {
   if (typeof google === 'undefined' || !google.accounts) { setTimeout(initGoogleAuth, 200); return; }
-  // 一次性清除舊 scope 快取，強制使用者重新授權取得 spreadsheets 權限
+  // 一次性清除舊 token 快取，強制使用者重新授權
   if (!localStorage.getItem('simmer_scope_v2')) {
     const oldEmail = localStorage.getItem(SIMMER_EMAIL_KEY);
     if (oldEmail) localStorage.removeItem(SIMMER_SHEET_ID_KEY + oldEmail);
@@ -9720,7 +9720,7 @@ function initGoogleAuth() {
   }
   googleTokenClient = google.accounts.oauth2.initTokenClient({
     client_id: GOOGLE_CLIENT_ID,
-    scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file email profile',
+    scope: 'https://www.googleapis.com/auth/drive.file email profile',
     callback: () => {},
   });
   // 嘗試靜默還原上次登入（不跳視窗）
@@ -9815,7 +9815,7 @@ async function googleLogin() {
   }
   // iOS Safari（非 PWA standalone）— 使用 redirect flow
   if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.navigator.standalone) {
-    const scope = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file email profile';
+    const scope = 'https://www.googleapis.com/auth/drive.file email profile';
     window.location.href = 'https://accounts.google.com/o/oauth2/v2/auth'
       + '?client_id='    + encodeURIComponent(GOOGLE_CLIENT_ID)
       + '&redirect_uri=' + encodeURIComponent(location.origin + location.pathname)
