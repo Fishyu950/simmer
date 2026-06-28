@@ -8537,7 +8537,7 @@ const DEFAULT_TAGS = ['家常菜','飲料','豆漿飲','湯品','台式早午餐
 
 // ── 雲端同步設定 ──
 // 請至 Google Cloud Console 建立 OAuth 2.0 用戶端並填入 Client ID
-const GOOGLE_CLIENT_ID   = '581562758769-9iu2tbkd8r807s5e7opokna65oi270jo.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID   = '1071477157711-89o12l72nolob0dl9aehqa5849pkgjkh.apps.googleusercontent.com';
 const SIMMER_SHEET_ID_KEY  = 'simmer_sheet_';
 const SIMMER_EMAIL_KEY     = 'simmer_user_email';
 const SIMMER_NAME_KEY      = 'simmer_user_name';
@@ -9722,11 +9722,16 @@ function initGoogleAuth() {
     localStorage.removeItem(SIMMER_AVATAR_KEY);
     localStorage.setItem('simmer_scope_v2', '1');
   }
-  googleTokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: GOOGLE_CLIENT_ID,
-    scope: 'https://www.googleapis.com/auth/drive.file email profile',
-    callback: () => {},
-  });
+  try {
+    googleTokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: 'https://www.googleapis.com/auth/drive.file email profile',
+      callback: () => {},
+    });
+  } catch(e) {
+    console.warn('[Simmer] GSI initTokenClient failed:', e);
+    return;
+  }
   // 嘗試靜默還原上次登入（不跳視窗）
   const savedEmail = localStorage.getItem(SIMMER_EMAIL_KEY);
   if (savedEmail) {
