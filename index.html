@@ -43,7 +43,17 @@
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   html, body { overflow-x:hidden; width:100%; }
-  body { background:var(--bg); color:var(--text); font-family:'Noto Serif TC',serif; font-weight:500; letter-spacing:0.06em; min-height:100vh; }
+  body { background:var(--bg); color:var(--text); font-family:'Noto Serif TC',serif; font-weight:500; letter-spacing:0.06em; min-height:100vh; -webkit-tap-highlight-color:transparent; }
+
+  /* ── NO-SELECT（UI 控制項禁止選取／長按選單，不套用於輸入框）── */
+  .no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
 
   .outer { max-width:420px; margin:0 auto; min-height:100vh; overflow-x:hidden; position:relative; background: linear-gradient(to bottom, #d6eac9 0%, #e8f3df 35%, #f5f2e8 65%); box-shadow:0 0 40px rgba(32,40,8,0.08); }
   .outer::before { display:none; }
@@ -379,6 +389,8 @@
   /* TOAST */
   .toast { position:fixed; top:24px; left:50%; transform:translateX(-50%) translateY(-80px); background:var(--text); color:#fff; padding:12px 24px; border-radius:50px; font-size:14px; z-index:999; transition:transform .3s cubic-bezier(.34,1.3,.64,1); white-space:nowrap; letter-spacing:0.08em; }
   .toast.show { transform:translateX(-50%) translateY(0); }
+  .toast.toast-bottom { top:auto; bottom:110px; transform:translateX(-50%) translateY(80px); }
+  .toast.toast-bottom.show { transform:translateX(-50%) translateY(0); }
 
   /* SHEET LOST BANNER */
   .sheet-lost-banner { display:none; position:fixed; top:0; left:50%; transform:translateX(-50%); width:100%; max-width:420px; background:#c62828; color:#fff; padding:10px 16px; text-align:center; font-size:13px; z-index:998; letter-spacing:0.05em; }
@@ -8216,8 +8228,8 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
 
   <!-- 分頁切換（僅食譜頁顯示）-->
   <div class="page-tabs" id="pageTabs">
-    <button class="page-tab active" onclick="switchTab('category',this)">食譜分類</button>
-    <button class="page-tab" onclick="switchTab('all',this)">全部</button>
+    <button class="page-tab active no-select" onclick="switchTab('category',this)">食譜分類</button>
+    <button class="page-tab no-select" onclick="switchTab('all',this)">全部</button>
   </div>
 
   <!-- 食譜分類 tab -->
@@ -8240,7 +8252,7 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
   <!-- 分類資料夾展開頁 -->
   <div class="folder-detail-panel" id="folderDetail">
     <div class="folder-detail-top">
-      <button class="folder-detail-back" onclick="closeFolderDetail()">←</button>
+      <button class="folder-detail-back" onclick="layerBack()">←</button>
       <div class="folder-detail-title" id="folderDetailTitle"></div>
     </div>
     <div class="folder-detail-grid" id="folderDetailGrid"></div>
@@ -8250,7 +8262,7 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
   <!-- DETAIL VIEW -->
   <div class="slide-view" id="detailView">
     <div class="view-top">
-      <button class="view-back" onclick="closeDetail()">←</button>
+      <button class="view-back" onclick="layerBack()">←</button>
       <span class="view-top-title">食譜詳情</span>
     </div>
     <div class="detail-hero">
@@ -8412,14 +8424,14 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
       </div>
 
       <!-- 版本 -->
-      <div class="settings-version">Simmer v1.1 · build 20260707</div>
+      <div class="settings-version">Simmer v1.2 · build 20260711</div>
     </div>
   </div>
 
   <!-- RECYCLE BIN VIEW -->
   <div class="slide-view recycle" id="recycleBinView">
     <div class="view-top">
-      <button class="view-back" onclick="closeRecycleBin()"><span class="material-symbols-outlined" style="font-size:22px">arrow_back</span></button>
+      <button class="view-back" onclick="layerBack()"><span class="material-symbols-outlined" style="font-size:22px">arrow_back</span></button>
       <span class="view-top-title">回收桶</span>
       <button id="clearAllBinBtn" onclick="clearAllRecycleBin()" style="display:none;position:absolute;right:20px;background:transparent;border:none;color:var(--danger,#c0392b);font-size:14px;font-weight:600;font-family:'Noto Serif TC',serif;cursor:pointer;padding:4px 8px;border-radius:8px">清除全部</button>
     </div>
@@ -8490,19 +8502,19 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
 </div>
 
   <nav class="bottom-nav">
-    <div class="nav-item active" id="navHome" onclick="navClick('home')">
+    <div class="nav-item active no-select" id="navHome" onclick="navClick('home')">
       <div class="nav-icon-wrap">
         <span class="material-symbols-outlined">menu_book_2</span>
       </div>
       <span class="nav-label">食譜</span>
     </div>
-    <button class="add-nav-btn" onclick="openNew()">
+    <button class="add-nav-btn no-select" onclick="openNew()">
       <div class="add-nav-btn-circle">
         <span class="material-symbols-outlined">stylus</span>
       </div>
       <span class="nav-label">新增</span>
     </button>
-    <div class="nav-item" id="navSettings" onclick="navClick('settings')">
+    <div class="nav-item no-select" id="navSettings" onclick="navClick('settings')">
       <div class="nav-icon-wrap">
         <span class="material-symbols-outlined">manufacturing</span>
       </div>
@@ -8609,12 +8621,12 @@ function renderFolderGrid() {
   allTags.forEach(t => { if (!tagCounts[t]) tagCounts[t] = 0; });
   const entries = Object.entries(tagCounts);
   const addCard = `
-    <div class="folder-card folder-add-card" onclick="openAddCat()">
+    <div class="folder-card folder-add-card no-select" onclick="openAddCat()">
       <span class="material-symbols-outlined add-plus">add</span>
       <span class="add-label">新增分類</span>
     </div>`;
   document.getElementById('folderGrid').innerHTML = entries.map(([tag, count], i) => `
-    <div class="folder-card" data-tag="${tag}" style="animation-delay:${i*0.06}s"
+    <div class="folder-card no-select" data-tag="${tag}" style="animation-delay:${i*0.06}s"
       onclick="folderCardClick('${tag}', event)"
       oncontextmenu="event.preventDefault(); enterEditMode();"
       draggable="false"
@@ -8624,7 +8636,7 @@ function renderFolderGrid() {
       onmousedown="startCatLongPress('${tag}',event)"
       onmouseup="clearCatLongPress()"
       onmouseleave="clearCatLongPress()">
-      <button class="cat-edit-btn" onclick="event.stopPropagation();openEditCat('${tag}')"><span class="material-symbols-outlined">brush</span></button>
+      <button class="cat-edit-btn no-select" onclick="event.stopPropagation();openEditCat('${tag}')"><span class="material-symbols-outlined">brush</span></button>
       <div class="folder-holes"><div class="folder-hole"></div><div class="folder-hole"></div></div>
       <div class="folder-icon">${catEmojis[tag]||FOLDER_ICONS[tag]||'📂'}</div>
       <div class="folder-info">
@@ -9082,6 +9094,7 @@ function openFolderDetail(tag) {
     ? list.map((r,i) => recipeCardHTML(r,i)).join('')
     : '<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:40px 0;font-size:14px">這個分類還沒有食譜</div>';
   document.getElementById('folderDetail').classList.add('open');
+  pushNavLayer('folderDetail', closeFolderDetail);
 }
 
 function closeFolderDetail() {
@@ -9200,7 +9213,7 @@ function recipeCardHTML(r, i, inSelectMode) {
     : '';
 
   return `
-  <div class="recipe-card${isSelected?' selected':''}" data-id="${r.id}" style="${i>=0?'animation-delay:'+i*0.06+'s':'animation:none'}" ${clickHandler} ${longPress}>
+  <div class="recipe-card no-select${isSelected?' selected':''}" data-id="${r.id}" style="${i>=0?'animation-delay:'+i*0.06+'s':'animation:none'}" ${clickHandler} ${longPress}>
     ${isAllTab ? `<div class="card-check"><svg viewBox="0 0 13 10" fill="none"><polyline points="1,5 5,9 12,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>` : ''}
     <div class="card-body">
       <div class="cat-badge">${tagLabel}</div>
@@ -9325,12 +9338,13 @@ function openDetail(id) {
     ${r.url ? `<div class="d-section"><div class="d-section-title">影片來源</div><a class="source-btn" href="${r.url}" target="_blank">查看原始影片・${r.src} ↗</a></div>` : ''}
   `;
   const dv = document.getElementById('detailView'); dv.classList.add('open'); dv.scrollTop = 0;
+  pushNavLayer('detail', closeDetail);
 }
 function closeDetail() { document.getElementById('detailView').classList.remove('open'); }
 
 // EDIT
 function openEditFromDetail() {
-  closeDetail();
+  layerBack();
   setTimeout(() => openEdit(currentEditId), 320);
 }
 function openEdit(id) {
@@ -9356,10 +9370,16 @@ function openEdit(id) {
   document.querySelector('.bottom-nav').style.display = '';
   // 記錄初始快照，用於離開確認
   setTimeout(() => { editOriginalSnapshot = getEditSnapshot(); }, 50);
+  pushNavLayer('edit', closeEditLayer);
 }
 function confirmCloseEdit() {
-  if (isEditDirty() && !confirm('有未儲存的內容，確定要離開嗎？')) return;
+  layerBack();
+}
+
+function closeEditLayer() {
+  if (isEditDirty() && !confirm('有未儲存的內容，確定要離開嗎？')) return false;
   closeEdit();
+  return true;
 }
 
 function closeEdit() {
@@ -9371,7 +9391,7 @@ function closeEdit() {
 function renderTagPicker(selected) {
   document.getElementById('tagPicker').innerHTML = allTags.map(t => {
     const em = catEmojis[t] || FOLDER_ICONS[t] || '';
-    return `<button type="button" class="tag-pick-btn${t===selected?' selected':''}" data-tag="${t}" onclick="selectTag(this)">${em ? em + ' ' : ''}${t}</button>`;
+    return `<button type="button" class="tag-pick-btn no-select${t===selected?' selected':''}" data-tag="${t}" onclick="selectTag(this)">${em ? em + ' ' : ''}${t}</button>`;
   }).join('');
 }
 
@@ -9523,15 +9543,17 @@ function saveRecipe() {
     showToast('✅ 食譜已新增'); saveToStorage(); refreshHome();
   }
   syncAfterWrite();
-  closeEdit();
+  editOriginalSnapshot = getEditSnapshot();
+  layerBack();
   setTimeout(() => renderList(recipes), 350);
 }
 
 function openNew() { openEdit(null); }
 
-function showToast(msg) {
+function showToast(msg, bottom) {
   const t = document.getElementById('toast');
   t.textContent = msg;
+  t.classList.toggle('toast-bottom', !!bottom);
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2400);
 }
@@ -10188,6 +10210,7 @@ function updateRecycleBadge() {
 function openRecycleBin() {
   renderRecycleBin();
   document.getElementById('recycleBinView').classList.add('open');
+  pushNavLayer('recycleBin', closeRecycleBin);
 }
 function closeRecycleBin() {
   document.getElementById('recycleBinView').classList.remove('open');
@@ -10223,7 +10246,7 @@ function deleteRecipe(id) {
   saveToStorage();
   syncAfterWrite();
   refreshHome();
-  closeDetail();
+  layerBack();
   showToast('已移至回收桶');
 }
 
@@ -10352,9 +10375,9 @@ function exportToExcelAll() {
 (function() {
   function getPanels() {
     return [
-      { id: 'editView',       close: () => { if (isEditDirty() && !confirm('有未儲存的內容，確定要離開嗎？')) return false; closeEdit(); return true; } },
-      { id: 'detailView',     close: () => { closeDetail(); return true; } },
-      { id: 'recycleBinView', close: () => { document.getElementById('recycleBinView').classList.remove('open'); return true; } },
+      { id: 'editView' },
+      { id: 'detailView' },
+      { id: 'recycleBinView' },
     ];
   }
 
@@ -10370,7 +10393,7 @@ function exportToExcelAll() {
       if (el && el.classList.contains('open')) return { el, ...p };
     }
     const fd = document.querySelector('.folder-detail-panel.open');
-    if (fd) return { el: fd, close: () => { closeFolderDetail(); return true; } };
+    if (fd) return { el: fd, id: 'folderDetail' };
     return null;
   }
 
@@ -10440,9 +10463,8 @@ function exportToExcelAll() {
     if (shouldClose) {
       el.style.transform = isSlideView ? 'translateX(calc(-50% + 100vw))' : 'translateX(100%)';
       if (ov) { ov.style.transition = 'opacity 0.25s ease-out'; ov.style.opacity = '0'; }
-      const p = swipeState.panel;
       setTimeout(() => {
-        p.close();
+        layerBack();
         el.style.transform = ''; el.style.transition = '';
         if (ov) { ov.style.transition = ''; ov.style.opacity = '0'; }
       }, 250);
@@ -10458,6 +10480,62 @@ function exportToExcelAll() {
   }, { passive: true });
 })();
 
+// ── Android 返回鍵：逐層返回 + 首頁再按一次離開 ──
+let navStack = [];
+
+function pushNavLayer(name, closeFn) {
+  navStack.push({ name, close: closeFn });
+  history.pushState({ simmerLayer: name }, '', location.href);
+}
+
+// 畫面內的返回/取消/關閉按鈕統一呼叫這個，交給 popstate 實際執行關閉
+function layerBack() {
+  history.back();
+}
+
+let lastBackPressTime = 0;
+function handleExitAttempt() {
+  const now = Date.now();
+  if (now - lastBackPressTime < 2000) {
+    // 2 秒內第二次按返回鍵：不再攔截，讓瀏覽器/系統自然關閉頁面
+  } else {
+    lastBackPressTime = now;
+    showToast('再按一次返回鍵離開 Simmer', true);
+    history.pushState({ simmerLayer: 'home' }, '', location.href);
+  }
+}
+
+window.addEventListener('popstate', () => {
+  // 次層彈窗／分類編輯模式優先關閉，並補回一層 history 避免真的跳出
+  if (epPickerOpen) { closeEmojiPicker(); history.pushState({ simmerLayer: 'compensate' }, '', location.href); return; }
+  if (recipeEpPickerOpen) { closeRecipeEmojiPicker(); history.pushState({ simmerLayer: 'compensate' }, '', location.href); return; }
+  if (document.getElementById('catModalOverlay')?.classList.contains('open')) { closeCatModal(); history.pushState({ simmerLayer: 'compensate' }, '', location.href); return; }
+  if (folderEditMode) { exitEditMode(); history.pushState({ simmerLayer: 'compensate' }, '', location.href); return; }
+
+  // 畫面堆疊逐層返回
+  if (navStack.length) {
+    const layer = navStack[navStack.length - 1];
+    if (layer.close() === false) {
+      history.pushState({ simmerLayer: layer.name }, '', location.href); // 使用者取消關閉，補回這一層
+    } else {
+      navStack.pop();
+    }
+    return;
+  }
+
+  // 設定頁視為首頁同層，返回應回首頁
+  if (currentPage === 'settings') {
+    navClick('home');
+    history.pushState({ simmerLayer: 'home' }, '', location.href);
+    return;
+  }
+
+  // 已經在首頁：再按一次返回鍵才離開
+  handleExitAttempt();
+});
+
+// 補一層 history，讓首頁的第一次返回鍵能被攔截，而不是直接跳出 APP
+history.pushState({ simmerLayer: 'home' }, '', location.href);
 
 </script>
 <script>
