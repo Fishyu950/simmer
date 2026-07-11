@@ -8424,7 +8424,7 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
       </div>
 
       <!-- 版本 -->
-      <div class="settings-version">Simmer v1.2 · build 20260711</div>
+      <div class="settings-version">Simmer v1.3 · build 20260712</div>
     </div>
   </div>
 
@@ -9094,7 +9094,7 @@ function openFolderDetail(tag) {
     ? list.map((r,i) => recipeCardHTML(r,i)).join('')
     : '<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:40px 0;font-size:14px">這個分類還沒有食譜</div>';
   document.getElementById('folderDetail').classList.add('open');
-  pushNavLayer('folderDetail', closeFolderDetail);
+  pushNavLayer('folderDetail');
 }
 
 function closeFolderDetail() {
@@ -9320,9 +9320,8 @@ function filterRecipes(q) {
 
 
 // DETAIL
-function openDetail(id) {
+function renderDetail(id) {
   const r = recipes.find(x => x.id === id);
-  currentEditId = id;
   document.getElementById('dTitle').textContent = r.name;
   document.getElementById('dMeta').innerHTML = r.tags && r.tags.length ? r.tags.map(t=>`<div class="cat-badge" style="margin-right:6px">${t}</div>`).join('') : '<div class="cat-badge">其它</div>';
   document.getElementById('dBody').innerHTML = `
@@ -9337,15 +9336,19 @@ function openDetail(id) {
     ${r.notes ? `<div class="d-section"><div class="d-section-title">個人備註</div><div style="font-size:15px;line-height:1.9;color:var(--brown-light);font-weight:500;letter-spacing:0.06em">${r.notes}</div></div>` : ''}
     ${r.url ? `<div class="d-section"><div class="d-section-title">影片來源</div><a class="source-btn" href="${r.url}" target="_blank">查看原始影片・${r.src} ↗</a></div>` : ''}
   `;
+}
+function openDetail(id) {
+  currentEditId = id;
+  renderDetail(id);
   const dv = document.getElementById('detailView'); dv.classList.add('open'); dv.scrollTop = 0;
-  pushNavLayer('detail', closeDetail);
+  pushNavLayer('detail');
 }
 function closeDetail() { document.getElementById('detailView').classList.remove('open'); }
 
 // EDIT
 function openEditFromDetail() {
-  layerBack();
-  setTimeout(() => openEdit(currentEditId), 320);
+  // 編輯頁疊在詳情頁「之上」（不關閉詳情頁），返回時才會先退回詳情頁而不是直接跳回首頁
+  openEdit(currentEditId);
 }
 function openEdit(id) {
   const isNew = !id;
@@ -9370,7 +9373,7 @@ function openEdit(id) {
   document.querySelector('.bottom-nav').style.display = '';
   // 記錄初始快照，用於離開確認
   setTimeout(() => { editOriginalSnapshot = getEditSnapshot(); }, 50);
-  pushNavLayer('edit', closeEditLayer);
+  pushNavLayer('edit');
 }
 function confirmCloseEdit() {
   layerBack();
@@ -9379,6 +9382,10 @@ function confirmCloseEdit() {
 function closeEditLayer() {
   if (isEditDirty() && !confirm('有未儲存的內容，確定要離開嗎？')) return false;
   closeEdit();
+  // 編輯頁若是疊在詳情頁之上開啟的，關閉後要刷新詳情頁內容（可能剛儲存過）
+  if (document.getElementById('detailView').classList.contains('open') && currentEditId) {
+    renderDetail(currentEditId);
+  }
   return true;
 }
 
@@ -10210,7 +10217,7 @@ function updateRecycleBadge() {
 function openRecycleBin() {
   renderRecycleBin();
   document.getElementById('recycleBinView').classList.add('open');
-  pushNavLayer('recycleBin', closeRecycleBin);
+  pushNavLayer('recycleBin');
 }
 function closeRecycleBin() {
   document.getElementById('recycleBinView').classList.remove('open');
@@ -10480,17 +10487,31 @@ function exportToExcelAll() {
   }, { passive: true });
 })();
 
-// ── Android 返回鍵：逐層返回 + 首頁再按一次離開 ──
-let navStack = [];
+// ── Android 返回鍵：畫面堆疊陣列 + 首頁再按一次離開 ──
+// screenStack 只存「名稱」，實際關閉函式透過 LAYER_CLOSERS 查表取得，
+// 且每次 pushState 都把完整堆疊寫進 history.state，popstate 時以它為準校正，
+// 避免 in-memory 計數跟瀏覽器實際的 history 位置兜不起來。
+let screenStack = [];
+const LAYER_CLOSERS = {
+  folderDetail: () => { closeFolderDetail(); return true; },
+  detail: () => { closeDetail(); return true; },
+  edit: closeEditLayer,
+  recycleBin: () => { closeRecycleBin(); return true; },
+};
 
-function pushNavLayer(name, closeFn) {
-  navStack.push({ name, close: closeFn });
-  history.pushState({ simmerLayer: name }, '', location.href);
+function pushNavLayer(name) {
+  screenStack.push(name);
+  history.pushState({ simmerStack: [...screenStack] }, '', location.href);
 }
 
 // 畫面內的返回/取消/關閉按鈕統一呼叫這個，交給 popstate 實際執行關閉
 function layerBack() {
-  history.back();
+  if (screenStack.length) history.back();
+}
+
+function pushCompensatingState() {
+  // 次層彈窗／首頁提示等「沒有自己 push 過」的情況，關閉後補回原本的位置
+  history.pushState({ simmerStack: [...screenStack] }, '', location.href);
 }
 
 let lastBackPressTime = 0;
@@ -10501,41 +10522,54 @@ function handleExitAttempt() {
   } else {
     lastBackPressTime = now;
     showToast('再按一次返回鍵離開 Simmer', true);
-    history.pushState({ simmerLayer: 'home' }, '', location.href);
+    pushCompensatingState();
   }
 }
 
-window.addEventListener('popstate', () => {
-  // 次層彈窗／分類編輯模式優先關閉，並補回一層 history 避免真的跳出
-  if (epPickerOpen) { closeEmojiPicker(); history.pushState({ simmerLayer: 'compensate' }, '', location.href); return; }
-  if (recipeEpPickerOpen) { closeRecipeEmojiPicker(); history.pushState({ simmerLayer: 'compensate' }, '', location.href); return; }
-  if (document.getElementById('catModalOverlay')?.classList.contains('open')) { closeCatModal(); history.pushState({ simmerLayer: 'compensate' }, '', location.href); return; }
-  if (folderEditMode) { exitEditMode(); history.pushState({ simmerLayer: 'compensate' }, '', location.href); return; }
+window.addEventListener('popstate', (e) => {
+  // 次層彈窗／分類編輯模式優先關閉，不動用 screenStack
+  if (epPickerOpen) { closeEmojiPicker(); pushCompensatingState(); return; }
+  if (recipeEpPickerOpen) { closeRecipeEmojiPicker(); pushCompensatingState(); return; }
+  if (document.getElementById('catModalOverlay')?.classList.contains('open')) { closeCatModal(); pushCompensatingState(); return; }
+  if (folderEditMode) { exitEditMode(); pushCompensatingState(); return; }
 
-  // 畫面堆疊逐層返回
-  if (navStack.length) {
-    const layer = navStack[navStack.length - 1];
-    if (layer.close() === false) {
-      history.pushState({ simmerLayer: layer.name }, '', location.href); // 使用者取消關閉，補回這一層
-    } else {
-      navStack.pop();
+  // 以瀏覽器實際的 history.state 校正堆疊，而不是完全信任 in-memory 計數
+  const restoredStack = (e.state && Array.isArray(e.state.simmerStack)) ? e.state.simmerStack : [];
+
+  // 只有「目前還有堆疊」時，才可能是補回的 state（沒有真正退掉一層）；
+  // 若目前已經在首頁層級（length 0），任何一次 popstate 都代表使用者真的按了返回鍵，
+  // 一定要往下走到 handleExitAttempt() 判斷，不能在這裡就同步後直接 return。
+  if (screenStack.length > 0 && restoredStack.length >= screenStack.length) {
+    screenStack = restoredStack;
+    return;
+  }
+
+  if (screenStack.length) {
+    const closedLayerName = screenStack[screenStack.length - 1];
+    const closer = LAYER_CLOSERS[closedLayerName];
+    const result = closer ? closer() : true;
+    if (result === false) {
+      // 使用者取消關閉（例如編輯頁未儲存），補回這一層
+      pushCompensatingState();
+      return;
     }
-    return;
+    screenStack = restoredStack;
   }
 
-  // 設定頁視為首頁同層，返回應回首頁
-  if (currentPage === 'settings') {
-    navClick('home');
-    history.pushState({ simmerLayer: 'home' }, '', location.href);
-    return;
+  if (screenStack.length === 0) {
+    // 設定頁視為首頁同層，返回應回首頁
+    if (currentPage === 'settings') {
+      navClick('home');
+      pushCompensatingState();
+      return;
+    }
+    // 已經在首頁：再按一次返回鍵才離開
+    handleExitAttempt();
   }
-
-  // 已經在首頁：再按一次返回鍵才離開
-  handleExitAttempt();
 });
 
 // 補一層 history，讓首頁的第一次返回鍵能被攔截，而不是直接跳出 APP
-history.pushState({ simmerLayer: 'home' }, '', location.href);
+history.pushState({ simmerStack: [] }, '', location.href);
 
 </script>
 <script>

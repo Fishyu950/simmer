@@ -1,4 +1,4 @@
-const CACHE_NAME = 'simmer-v1.2'; // build 20260711
+const CACHE_NAME = 'simmer-v1.3'; // build 20260712
 const PRECACHE = ['./manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
