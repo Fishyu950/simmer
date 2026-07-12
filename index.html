@@ -110,9 +110,9 @@
     user-select: none;
     -webkit-user-select: none;
   }
-  .folder-card:hover { transform:translateY(-2px); box-shadow:0 6px 18px var(--shadow); }
+  .folder-card:active { transform:translateY(-2px); box-shadow:0 6px 18px var(--shadow); }
   .folder-add-card { background:transparent; border:2px dashed #709252; box-shadow:none; color:#709252; }
-  .folder-add-card:hover { background:var(--surface); box-shadow:none; transform:translateY(-2px); border-color:#33432B; color:#33432B; }
+  .folder-add-card:active { background:var(--surface); box-shadow:none; transform:translateY(-2px); border-color:#33432B; color:#33432B; }
   .folder-add-card .add-plus { font-size:26px; line-height:1; }
   .folder-add-card .add-label { font-size:11px; font-weight:600; letter-spacing:0.08em; }
 
@@ -135,7 +135,7 @@
   @keyframes riseIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
 
   .recipe-card { background:var(--card); border:2px solid transparent; border-radius:16px; cursor:pointer; transition:all .22s; box-shadow:0 2px 10px var(--shadow); overflow:hidden; animation:riseIn .45s ease both; position:relative; -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none; user-select:none; -webkit-user-select:none; }
-  .recipe-card:hover { transform:translateY(-2px); box-shadow:0 6px 18px var(--shadow); }
+  .recipe-card:active { transform:translateY(-2px); box-shadow:0 6px 18px var(--shadow); }
   .recipe-card.selected { border-color:#709252; box-shadow:0 2px 14px rgba(32,40,8,0.08); }
   .recipe-card.selected .card-check { opacity:1; }
   .card-check { position:absolute; top:10px; right:10px; width:22px; height:22px; border-radius:50%; background:#709252; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .2s; pointer-events:none; }
@@ -182,7 +182,7 @@
   /* 新增按鈕 — 浮起圓形 + 文字 */
   .add-nav-btn { display:flex; flex-direction:column; align-items:center; background:none; border:none; cursor:pointer; flex:1; }
   .add-nav-btn-circle { width:52px; height:52px; border-radius:50%; background:#709252; display:flex; align-items:center; justify-content:center; transition:all .2s; border:none; }
-  .add-nav-btn:hover .add-nav-btn-circle { background:#33432B; transform:scale(1.06); }
+  .add-nav-btn:active .add-nav-btn-circle { background:#33432B; transform:scale(1.06); }
   .add-nav-btn .material-symbols-outlined { font-size:30px; color:#fff; }
   .add-nav-btn .nav-label { display:none; }
 
@@ -197,7 +197,7 @@
   .view-top { background:var(--card); padding:52px 24px 20px; border-bottom:none; position:relative; display:flex; align-items:center; justify-content:center; }
   .view-top::after { display:none; }
   .view-back { position:absolute; left:20px; background:var(--surface); border:none; border-radius:50%; width:38px; height:38px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:17px; color:var(--text); transition:background .2s; }
-  .view-back:hover { background:var(--border); }
+  .view-back:active { background:var(--border); }
   .view-top-title { font-size:18px; color:var(--text); font-weight:700; letter-spacing:0.12em; }
 
   /* DETAIL */
@@ -207,10 +207,10 @@
   .detail-icon-btns { position:absolute; top:20px; right:20px; display:flex; gap:8px; align-items:center; }
   .detail-icon-btn-edit { display:flex; align-items:center; gap:6px; background:#DEC59E; border:none; cursor:pointer; height:38px; padding:0 16px 0 12px; border-radius:50px; transition:all .18s; color:#202808; font-family:'Noto Serif TC',serif; font-size:14px; font-weight:700; letter-spacing:0.06em; }
   .detail-icon-btn-edit .material-symbols-outlined { font-size:18px; color:#202808; }
-  .detail-icon-btn-edit:hover { background:#d4b48a; }
+  .detail-icon-btn-edit:active { background:#d4b48a; }
   .detail-icon-btn-delete { background:var(--green-bg); border:none; cursor:pointer; width:38px; height:38px; border-radius:50%; transition:all .18s; display:flex; align-items:center; justify-content:center; }
   .detail-icon-btn-delete .material-symbols-outlined { font-size:20px; color:var(--danger); }
-  .detail-icon-btn-delete:hover { background:#f5d0d0; }
+  .detail-icon-btn-delete:active { background:#f5d0d0; }
 
   .detail-body { padding:20px 20px 120px; }
   .d-section { margin-bottom:24px; }
@@ -222,7 +222,7 @@
   .step-num { width:28px; height:28px; border-radius:50%; background:#fab62d; color:white; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:3px; }
   .step-text { font-size:17px; line-height:1.9; color:var(--text); font-weight:700; }
   .source-btn { display:flex; align-items:center; gap:10px; width:100%; padding:14px 18px; background:var(--card); border:none; border-radius:14px; font-family:'Noto Serif TC',serif; font-size:14px; color:var(--text2); cursor:pointer; text-decoration:none; transition:all .2s; letter-spacing:0.06em; box-shadow:0 1px 4px rgba(32,40,8,0.07); }
-  .source-btn:hover { color:var(--accent); }
+  .source-btn:active { color:var(--accent); }
 
   /* EDIT VIEW */
   .edit-body { padding:20px 20px 20px; display:flex; flex-direction:column; gap:18px; background:var(--bg); flex:1; overflow-y:auto; }
@@ -247,37 +247,37 @@
   .unit-dropdown.open { display:block; animation:dropIn .18s ease; }
   @keyframes dropIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
   .unit-opt { padding:11px 14px; font-family:'Noto Serif TC',serif; font-size:14px; color:var(--text); font-weight:500; cursor:pointer; transition:background .15s; }
-  .unit-opt:hover { background:var(--surface); }
+  .unit-opt:active { background:var(--surface); }
   .unit-opt.selected { color:var(--accent); font-weight:700; background:var(--accent-bg); }
   .ingr-del { width:36px; height:36px; flex-shrink:0; background:var(--card); border:none; border-radius:10px; color:var(--muted); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; box-shadow:0 1px 4px rgba(32,40,8,0.07); }
-  .ingr-del:hover { color:var(--danger); }
+  .ingr-del:active { color:var(--danger); }
 
   .add-row-btn { display:flex; align-items:center; gap:8px; padding:11px 14px; background:transparent; border:1.5px dashed #709252; border-radius:12px; color:#709252; font-family:'Noto Serif TC',serif; font-size:14px; cursor:pointer; transition:all .2s; width:100%; letter-spacing:0.06em; margin-top:10px; }
-  .add-row-btn:hover { border-color:#33432B; color:#33432B; }
+  .add-row-btn:active { border-color:#33432B; color:#33432B; }
 
   /* tag picker */
   .tag-picker { display:flex; flex-wrap:wrap; gap:8px; }
   .tag-pick-btn { padding:8px 16px; border-radius:50px; border:none; background:var(--card); color:var(--text2); font-family:'Noto Serif TC',serif; font-size:14px; font-weight:500; cursor:pointer; transition:all .2s; letter-spacing:0.06em; box-shadow:0 1px 4px rgba(32,40,8,0.07); }
-  .tag-pick-btn:hover { border-color:#6A784D; color:#6A784D; }
+  .tag-pick-btn:active { border-color:#6A784D; color:#6A784D; }
   .tag-pick-btn.selected { background:#6A784D; color:#fff; border-color:#6A784D; font-weight:600; }
   .tag-add-wrap { display:flex; gap:8px; margin-top:4px; }
   .tag-add-input { flex:1; min-width:0; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:10px 14px; font-family:'Noto Serif TC',serif; font-size:14px; color:var(--text); outline:none; letter-spacing:0.06em; }
   .tag-add-input::placeholder { color:var(--muted); }
   .tag-add-btn { background:#6A784D; color:white; border:none; border-radius:12px; padding:10px 16px; font-family:'Noto Serif TC',serif; font-size:14px; font-weight:600; cursor:pointer; white-space:nowrap; flex-shrink:0; box-shadow:0 2px 8px rgba(32,40,8,0.08); }
-  .tag-add-btn:hover { background:#33432B; }
+  .tag-add-btn:active { background:#33432B; }
 
   .steps-list { display:flex; flex-direction:column; gap:10px; }
   .step-edit-row { display:flex; gap:8px; align-items:flex-start; }
   .step-edit-num { width:28px; height:28px; border-radius:50%; background:#fab62d; color:white; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:10px; }
   .step-edit-row textarea { flex:1; min-height:72px; }
   .step-del { width:36px; height:36px; flex-shrink:0; background:var(--card); border:none; border-radius:10px; color:var(--muted); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; margin-top:10px; box-shadow:0 1px 4px rgba(32,40,8,0.07); }
-  .step-del:hover { color:var(--danger); }
+  .step-del:active { color:var(--danger); }
 
   .save-bar { background:var(--card); padding:14px 20px 100px; display:flex; gap:10px; flex-shrink:0; }
   .btn-save { flex:1; background:#DEC59E; color:#202808; border:none; border-radius:50px; padding:14px; font-family:'Noto Serif TC',serif; font-size:16px; font-weight:700; letter-spacing:0.1em; cursor:pointer; transition:all .2s; }
-  .btn-save:hover { background:#c9aa80; }
+  .btn-save:active { background:#c9aa80; }
   .btn-cancel { background:#F5F2E8; border:none; color:var(--text2); border-radius:50px; padding:14px 20px; font-family:'Noto Serif TC',serif; font-size:15px; cursor:pointer; transition:background .2s; letter-spacing:0.06em; }
-  .btn-cancel:hover { background:var(--border); }
+  .btn-cancel:active { background:var(--border); }
 
 
 
@@ -334,11 +334,11 @@
   .ep-cats { display:flex; gap:2px; padding:6px 8px; overflow-x:auto; scrollbar-width:none; flex-shrink:0; border-bottom:1px solid var(--border); }
   .ep-cats::-webkit-scrollbar { display:none; }
   .ep-cat { font-size:18px; padding:4px 7px; border-radius:8px; cursor:pointer; transition:background .15s; border:none; background:transparent; }
-  .ep-cat:hover { background:var(--surface); }
+  .ep-cat:active { background:var(--surface); }
   .ep-cat.active { background:var(--green-bg); }
   .ep-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; padding:8px; overflow-y:auto; flex:1; scrollbar-width:thin; }
   .ep-item { font-size:22px; padding:5px 2px; border-radius:8px; cursor:pointer; text-align:center; transition:all .12s; border:none; background:transparent; line-height:1.3; }
-  .ep-item:hover { background:var(--green-bg); transform:scale(1.15); }
+  .ep-item:active { background:var(--green-bg); transform:scale(1.15); }
   .ep-empty { grid-column:1/-1; text-align:center; color:var(--muted); font-size:13px; padding:16px 0; }
 
   /* ── 新增/編輯分類 MODAL ── */
@@ -360,8 +360,7 @@
   .cat-emoji-row { padding:18px 20px 0; flex-shrink:0; }
   .cat-emoji-trigger-wrap { display:flex; align-items:center; gap:14px; }
   .cat-emoji-btn { width:64px; height:64px; border-radius:18px; background:var(--surface); border:2px dashed var(--border); font-size:34px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .18s; flex-shrink:0; position:relative; user-select:none; }
-  .cat-emoji-btn:hover { border-color:var(--green); background:#f0f7ec; }
-  .cat-emoji-btn:active { transform:scale(.94); }
+  .cat-emoji-btn:active { border-color:var(--green); background:#f0f7ec; transform:scale(.94); }
   .cat-emoji-input-hidden { position:absolute; inset:0; opacity:0; font-size:34px; border:none; background:transparent; cursor:pointer; caret-color:transparent; }
   .cat-emoji-hint-title { font-size:14px; font-weight:700; color:var(--text); margin-bottom:4px; }
   .cat-emoji-hint-sub { font-size:12px; color:var(--muted); line-height:1.6; }
@@ -372,16 +371,16 @@
   .cat-preview-sub { font-size:12px; color:var(--muted); margin-top:2px; }
 
   .cat-confirm-btn { margin:16px 20px 0; padding:14px; background:#DEC59E; color:#202808; border:none; border-radius:16px; font-size:15px; font-weight:700; font-family:'Noto Serif TC',serif; letter-spacing:0.1em; cursor:pointer; transition:opacity .18s; flex-shrink:0; }
-  .cat-confirm-btn:hover { opacity:.88; }
+  .cat-confirm-btn:active { opacity:.88; }
   .cat-confirm-btn:disabled { background:var(--border); color:var(--muted); cursor:not-allowed; opacity:1; }
   .cat-delete-btn { margin:10px 20px 32px; padding:12px; background:transparent; color:var(--danger); border:1.5px solid var(--danger); border-radius:16px; font-size:14px; font-weight:600; font-family:'Noto Serif TC',serif; letter-spacing:0.08em; cursor:pointer; transition:all .18s; flex-shrink:0; }
-  .cat-delete-btn:hover { background:#fff0f0; }
+  .cat-delete-btn:active { background:#fff0f0; }
 
 
   /* ── 分頁 ── */
   .pagination { display:flex; align-items:center; justify-content:center; gap:6px; padding:16px 0 8px; }
   .pg-btn { width:36px; height:36px; border-radius:50%; border:none; background:rgba(255,255,255,0.75); color:var(--text2); font-family:'Noto Serif TC',serif; font-size:14px; font-weight:600; cursor:pointer; transition:all .18s; display:flex; align-items:center; justify-content:center; }
-  .pg-btn:hover { background:#fff; }
+  .pg-btn:active { background:#fff; }
   .pg-btn.active { background:#709252; color:#fff; }
   .pg-btn:disabled { opacity:.35; cursor:not-allowed; }
   .pg-arrow { font-size:18px; }
@@ -420,13 +419,13 @@
   .settings-row-pair { display:grid; grid-template-columns:1fr 1fr; gap:0; }
   .settings-action-btn { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:14px 12px; background:var(--card); border:none; cursor:pointer; transition:background .18s; font-family:'Noto Serif TC',serif; flex:1; }
   .settings-action-btn:first-child { border-right:1px solid var(--border); }
-  .settings-action-btn:hover { background:var(--surface); }
+  .settings-action-btn:active { background:var(--surface); }
   .settings-action-icon { font-size:22px !important; color:var(--green); line-height:1; }
   .settings-action-label { font-size:12px; color:var(--text2); font-weight:600; letter-spacing:0.08em; }
 
   .settings-row { display:flex; align-items:center; gap:14px; padding:15px 18px; background:var(--card); border:none; width:100%; cursor:pointer; transition:background .18s; font-family:'Noto Serif TC',serif; text-decoration:none; }
   .settings-row:not(:last-child) { border-bottom:1px solid var(--border); }
-  .settings-row:hover { background:var(--surface); }
+  .settings-row:active { background:var(--surface); }
   .settings-row-icon { font-size:22px !important; color:var(--green); width:26px; text-align:center; flex-shrink:0; line-height:1; }
   .settings-row-label { flex:1; font-size:15px; color:var(--text); font-weight:600; letter-spacing:0.06em; text-align:left; }
   .settings-row-badge { background:var(--accent); color:#fff; font-size:12px; font-weight:700; padding:2px 7px; border-radius:50px; min-width:22px; text-align:center; }
@@ -8424,7 +8423,7 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
       </div>
 
       <!-- 版本 -->
-      <div class="settings-version">Simmer v1.3 · build 20260712</div>
+      <div class="settings-version">Simmer v1.6 · build 20260712</div>
     </div>
   </div>
 
@@ -8566,25 +8565,62 @@ const LS_TAGS         = 'simmer_allTags';
 const LS_CAT_EMOJIS   = 'simmer_catEmojis';
 const LS_DELETED      = 'simmer_deleted';
 
+// ── 帳號隔離的 localStorage 命名空間 ──
+// 未登入時的暫存資料（訪客模式）跟登入後屬於某個帳號的資料，絕對不能共用同一組 key，
+// 否則登入前的暫存/測試資料會被誤當成該帳號的資料，直接同步上傳到雲端。
+// currentUser 在這裡先宣告（而不是留到 GOOGLE AUTH 區塊），是因為 loadFromStorage()
+// 在腳本一開始就會被呼叫一次，此時就要能依照「這台裝置上次登入的帳號」決定要讀哪個 key。
+let currentUser = null; // { name, email, avatar }
+(function seedCurrentUserForStorageScope() {
+  const savedEmail = localStorage.getItem(SIMMER_EMAIL_KEY);
+  if (savedEmail) {
+    currentUser = {
+      email:  savedEmail,
+      name:   localStorage.getItem(SIMMER_NAME_KEY)   || savedEmail,
+      avatar: localStorage.getItem(SIMMER_AVATAR_KEY) || '',
+    };
+  }
+})();
+
+function storageKey(base) {
+  return currentUser ? base + '_' + currentUser.email : base + '_guest';
+}
+
+// 一次性搬移：升級前的舊版沒有帳號隔離，資料都存在不分帳號的全域 key。
+// 只搬「一次」到目前這個 scope（登入中就進該帳號、未登入就進訪客），並清掉舊 key，
+// 避免舊資料之後又被錯誤地當成另一個帳號的資料混進去。
+(function migrateLegacyStorage() {
+  const MIGRATED_FLAG = 'simmer_scope_migrated_v1';
+  if (localStorage.getItem(MIGRATED_FLAG)) return;
+  [LS_RECIPES, LS_TAGS, LS_CAT_EMOJIS, LS_DELETED].forEach(base => {
+    const legacyValue = localStorage.getItem(base);
+    if (legacyValue !== null && localStorage.getItem(storageKey(base)) === null) {
+      localStorage.setItem(storageKey(base), legacyValue);
+    }
+    localStorage.removeItem(base);
+  });
+  localStorage.setItem(MIGRATED_FLAG, '1');
+})();
+
 function saveToStorage() {
   try {
-    localStorage.setItem(LS_RECIPES,    JSON.stringify(recipes));
-    localStorage.setItem(LS_TAGS,       JSON.stringify(allTags));
-    localStorage.setItem(LS_CAT_EMOJIS, JSON.stringify(catEmojis));
-    localStorage.setItem(LS_DELETED,    JSON.stringify(deletedRecipes));
+    localStorage.setItem(storageKey(LS_RECIPES),    JSON.stringify(recipes));
+    localStorage.setItem(storageKey(LS_TAGS),       JSON.stringify(allTags));
+    localStorage.setItem(storageKey(LS_CAT_EMOJIS), JSON.stringify(catEmojis));
+    localStorage.setItem(storageKey(LS_DELETED),    JSON.stringify(deletedRecipes));
   } catch(e) { console.warn('localStorage 儲存失敗', e); }
 }
 
 function loadFromStorage() {
   try {
-    const r = localStorage.getItem(LS_RECIPES);
-    const t = localStorage.getItem(LS_TAGS);
-    const e = localStorage.getItem(LS_CAT_EMOJIS);
-    const d = localStorage.getItem(LS_DELETED);
-    if (r) recipes        = JSON.parse(r);
-    if (t) allTags        = JSON.parse(t);
-    if (e) catEmojis      = JSON.parse(e);
-    if (d) deletedRecipes = JSON.parse(d);
+    const r = localStorage.getItem(storageKey(LS_RECIPES));
+    const t = localStorage.getItem(storageKey(LS_TAGS));
+    const e = localStorage.getItem(storageKey(LS_CAT_EMOJIS));
+    const d = localStorage.getItem(storageKey(LS_DELETED));
+    recipes        = r ? JSON.parse(r) : [];
+    allTags        = t ? JSON.parse(t) : [...DEFAULT_TAGS];
+    catEmojis      = e ? JSON.parse(e) : {};
+    deletedRecipes = d ? JSON.parse(d) : [];
     // 確保 nextId 比現有最大 id 大
     const maxId = Math.max(0, ...recipes.map(x => x.id), ...deletedRecipes.map(x => x.id));
     nextId = maxId + 1;
@@ -9676,7 +9712,7 @@ function goHome() {
 }
 
 // ── GOOGLE AUTH & SHEETS 雲端同步 ──
-let currentUser = null; // { name, email, avatar }
+// currentUser 已在檔案前面（localStorage 命名空間區塊）宣告，這裡不重複宣告
 let googleTokenClient = null, accessToken = null, tokenExpiry = 0;
 
 function updateAuthUI() {
@@ -9814,6 +9850,16 @@ async function ensureToken() {
 }
 
 // ── iOS OAuth redirect callback ──
+// 切換 currentUser 對應的 localStorage scope：登入時把記憶體換成「這個帳號自己的資料」
+// （新帳號通常是空的，直到 syncToSheets() 的 pull 補回雲端內容），登出時換回訪客暫存資料。
+// 絕對不能讓切換前的資料（例如訪客模式暫存、或另一個帳號留下的）被當成新 scope 的資料
+// 繼續留在畫面上，或是被 syncToSheets() 當成「這個帳號的資料」同步上傳。
+function switchAccountScope() {
+  loadFromStorage();
+  cleanupOldDeleted();
+  refreshHome();
+}
+
 async function handleOAuthCallback() {
   const hash = window.location.hash.slice(1);
   if (!hash.includes('access_token')) return;
@@ -9834,6 +9880,7 @@ async function handleOAuthCallback() {
     localStorage.setItem(SIMMER_EMAIL_KEY,  currentUser.email);
     localStorage.setItem(SIMMER_NAME_KEY,   currentUser.name);
     localStorage.setItem(SIMMER_AVATAR_KEY, currentUser.avatar);
+    switchAccountScope();
     updateAuthUI();
     updateHeaderUser(currentUser.name, currentUser.avatar);
     showToast('✅ 已登入 Google');
@@ -9849,8 +9896,11 @@ async function googleLogin() {
     alert('尚未設定 Google Client ID，請在 index.html 頂部填入 GOOGLE_CLIENT_ID');
     return;
   }
-  // iOS Safari（非 PWA standalone）— 使用 redirect flow
-  if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.navigator.standalone) {
+  // iOS（Safari 分頁或加到主畫面的 standalone PWA）都用 redirect flow：
+  // GSI 的 popup 流程在 iOS 的 WKWebView 環境下常常直接被吞掉、完全沒有錯誤訊息，
+  // standalone 模式甚至連可以開 popup 的視窗都沒有，看起來就是「點了沒反應」。
+  // 之前只排除了非 standalone 的情況，導致從主畫面圖示打開的 PWA 仍會走 popup 而失敗。
+  if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
     const scope = 'https://www.googleapis.com/auth/drive.file email profile';
     window.location.href = 'https://accounts.google.com/o/oauth2/v2/auth'
       + '?client_id='    + encodeURIComponent(GOOGLE_CLIENT_ID)
@@ -9872,6 +9922,7 @@ async function googleLogin() {
     localStorage.setItem(SIMMER_EMAIL_KEY,  currentUser.email);
     localStorage.setItem(SIMMER_NAME_KEY,   currentUser.name);
     localStorage.setItem(SIMMER_AVATAR_KEY, currentUser.avatar);
+    switchAccountScope();
     updateAuthUI();
     updateHeaderUser(currentUser.name, currentUser.avatar);
     hideReconnectBanner();
@@ -9892,6 +9943,7 @@ function googleLogout() {
   localStorage.removeItem(SIMMER_EMAIL_KEY);
   localStorage.removeItem(SIMMER_NAME_KEY);
   localStorage.removeItem(SIMMER_AVATAR_KEY);
+  switchAccountScope();
   updateAuthUI();
   showToast('已登出');
 }
@@ -10079,8 +10131,9 @@ async function ensureSheet(token) {
     } catch(e) { console.warn('[Simmer] ensureRecycleBinTab:', e); }
     return sheetId;
   }
-  // 備用：檢查 localStorage 快取的 ID
+  // 備用：檢查 localStorage 快取的 ID（有這個 key 代表這台裝置「曾經」同步過這個帳號）
   const cached = localStorage.getItem(SIMMER_SHEET_ID_KEY + currentUser.email);
+  const hadCachedSheet = !!cached;
   if (cached) {
     try {
       const check = await sheetsReq('GET',
@@ -10089,11 +10142,12 @@ async function ensureSheet(token) {
     } catch { /**/ }
     localStorage.removeItem(SIMMER_SHEET_ID_KEY + currentUser.email);
   }
-  // 試算表不存在 — 先備份本機資料，建立新試算表後立即還原
-  const localBackup = {
-    recipes: recipes.map(r => ({ ...r })),
-    deletedRecipes: deletedRecipes.map(r => ({ ...r })),
-  };
+  // 試算表不存在 — 只有「這台裝置曾經同步過這個帳號、但試算表不見了」（hadCachedSheet）
+  // 才需要用本機備份還原；真正第一次登入（從未有 cached sheet id）時，
+  // 本機目前的資料跟這個帳號無關（可能是登入前的訪客暫存），不能當成這個帳號的資料寫入新表。
+  const localBackup = hadCachedSheet
+    ? { recipes: recipes.map(r => ({ ...r })), deletedRecipes: deletedRecipes.map(r => ({ ...r })) }
+    : { recipes: [], deletedRecipes: [] };
   const newSheetId = await createSimmerSpreadsheet(token);
   if (localBackup.recipes.length || localBackup.deletedRecipes.length) {
     await Promise.all([
@@ -10122,14 +10176,26 @@ async function pullFromSheets(sheetId, token) {
     const local = byId[String(sr.id)];
     if (!local || (sr.updatedAt && sr.updatedAt > (local.updatedAt || ''))) byId[String(sr.id)] = sr;
   });
-  recipes = Object.values(byId);
-  nextId  = Math.max(nextId, ...recipes.map(r => Number(r.id) || 0)) + 1;
+  nextId = Math.max(nextId, ...Object.values(byId).map(r => Number(r.id) || 0)) + 1;
 
   const binById = Object.fromEntries(deletedRecipes.map(r => [String(r.id), r]));
   sheetsBin.forEach(sr => {
     const local = binById[String(sr.id)];
     if (!local || (sr.updatedAt && sr.updatedAt > (local.updatedAt || ''))) binById[String(sr.id)] = sr;
   });
+
+  // 交叉校正：同一筆 id 若同時出現在「食譜」與「回收桶」（例如另一台裝置刪除/還原後，
+  // 這台裝置尚未同步過那次動作，殘留的舊副本就會卡在錯的那一邊），
+  // 以刪除時間（deletedAt）跟最後編輯/還原時間（updatedAt）哪個較新為準，只留一份。
+  Object.keys(byId).forEach(id => {
+    const binR = binById[id];
+    if (!binR) return;
+    const activeTime = byId[id].updatedAt || '';
+    const binTime = binR.deletedAt || binR.updatedAt || '';
+    if (binTime >= activeTime) delete byId[id];   // 刪除發生在之後 → 這筆應視為已刪除
+    else delete binById[id];                       // 還原/編輯發生在之後 → 這筆應視為有效
+  });
+  recipes = Object.values(byId);
   deletedRecipes = Object.values(binById);
 
   cleanupOldDeleted();
