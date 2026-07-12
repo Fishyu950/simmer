@@ -32,6 +32,9 @@
     --border: #e4ddd5;
     --shadow: rgba(32,40,8,0.07);
     --danger: #b94040;
+    /* 底部固定導覽列的實際高度（10px 上內距 + 52px icon + 28px 下內距），
+       用來讓彈窗/表單的底部按鈕預留出不被蓋住的空間；safe-area 另外用 env() 加總，不要寫死在這個變數裡 */
+    --bottom-nav-height: 90px;
     /* legacy aliases so edit/detail still work */
     --brown: #2d3230;
     --brown-light: #5a6360;
@@ -57,7 +60,12 @@
 
   .outer { max-width:420px; margin:0 auto; min-height:100vh; overflow-x:hidden; position:relative; background: linear-gradient(to bottom, #d6eac9 0%, #e8f3df 35%, #f5f2e8 65%); box-shadow:0 0 40px rgba(32,40,8,0.08); }
   .outer::before { display:none; }
-  .app { position:relative; z-index:1; display:flex; flex-direction:column; min-height:100vh; }
+  /* 注意：這裡故意不設 z-index。.app 底下的 cat-modal-overlay(z-index:400)、
+     slide-view(z-index:350) 等元素之前因為 .app 有 z-index:1，被鎖進 .app 自己的 stacking
+     context，導致跟 .app 外面的 .bottom-nav(z-index:300) 比較時整包被當成 z-index:1，
+     結果彈窗實際上都被蓋在導覽列下面。position:relative 保留給 .folder-detail-panel 等
+     absolute 定位子元素當 containing block 用，但不能再加 z-index，否則同樣的坑會再出現。 */
+  .app { position:relative; display:flex; flex-direction:column; min-height:100vh; }
 
   /* HEADER */
   header { background:linear-gradient(135deg, #7a9e6e 0%, #bdd3ac 60%, #d6eac9 100%); border-bottom:none; padding:56px 24px 28px; position:relative; overflow:hidden; }
@@ -82,7 +90,7 @@
   .page-tab.active { background:#709252; color:#fff; box-shadow:0 2px 6px rgba(32,40,8,0.15); }
 
   /* ── TAB PANELS ── */
-  .tab-panel { display:none; flex:1; overflow-y:auto; padding-bottom:160px; }
+  .tab-panel { display:none; flex:1; overflow-y:auto; padding-bottom:calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 70px); }
   .tab-panel.active { display:block; }
 
   /* ── FOLDER GRID (食譜分類) ── */
@@ -165,7 +173,7 @@
   .folder-detail-top { background:var(--card); padding:52px 20px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:14px; }
   .folder-detail-back { background:var(--surface); border:none; border-radius:50%; width:38px; height:38px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:17px; color:var(--text); flex-shrink:0; }
   .folder-detail-title { font-size:18px; font-weight:700; color:var(--text); letter-spacing:0.1em; }
-  .folder-detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:16px 16px 20px; }
+  .folder-detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:16px 16px calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 20px); }
 
   /* BOTTOM NAV */
   .bottom-nav { display:flex; justify-content:space-around; align-items:center; padding:10px 16px 28px; background:var(--card); position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:420px; z-index:300; box-shadow:0 -4px 20px rgba(32,40,8,0.10); }
@@ -212,7 +220,7 @@
   .detail-icon-btn-delete .material-symbols-outlined { font-size:20px; color:var(--danger); }
   .detail-icon-btn-delete:active { background:#f5d0d0; }
 
-  .detail-body { padding:20px 20px 120px; }
+  .detail-body { padding:20px 20px calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 30px); }
   .d-section { margin-bottom:24px; }
   .d-section-title { font-size:13px; color:var(--muted); font-weight:600; letter-spacing:0.25em; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border); text-transform:uppercase; }
   .ingredient-row { display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid var(--border); font-size:17px; font-weight:600; }
@@ -273,7 +281,7 @@
   .step-del { width:36px; height:36px; flex-shrink:0; background:var(--card); border:none; border-radius:10px; color:var(--muted); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; margin-top:10px; box-shadow:0 1px 4px rgba(32,40,8,0.07); }
   .step-del:active { color:var(--danger); }
 
-  .save-bar { background:var(--card); padding:14px 20px 100px; display:flex; gap:10px; flex-shrink:0; }
+  .save-bar { background:var(--card); padding:14px 20px calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 10px); display:flex; gap:10px; flex-shrink:0; }
   .btn-save { flex:1; background:#DEC59E; color:#202808; border:none; border-radius:50px; padding:14px; font-family:'Noto Serif TC',serif; font-size:16px; font-weight:700; letter-spacing:0.1em; cursor:pointer; transition:all .2s; }
   .btn-save:active { background:#c9aa80; }
   .btn-cancel { background:#F5F2E8; border:none; color:var(--text2); border-radius:50px; padding:14px 20px; font-family:'Noto Serif TC',serif; font-size:15px; cursor:pointer; transition:background .2s; letter-spacing:0.06em; }
@@ -344,7 +352,7 @@
   /* ── 新增/編輯分類 MODAL ── */
   .cat-modal-overlay { position:fixed; inset:0; background:rgba(30,38,35,0.45); display:flex; align-items:flex-end; justify-content:center; z-index:400; opacity:0; pointer-events:none; transition:opacity .22s; }
   .cat-modal-overlay.open { opacity:1; pointer-events:auto; }
-  .cat-modal { background:var(--card); border-radius:28px 28px 0 0; width:100%; max-width:420px; padding:0 0 max(40px, env(safe-area-inset-bottom, 40px)); transform:translateY(100%); transition:transform .3s cubic-bezier(.34,1.2,.64,1); display:flex; flex-direction:column; max-height:90vh; overflow-y:auto; }
+  .cat-modal { background:var(--card); border-radius:28px 28px 0 0; width:100%; max-width:420px; padding:0 0 calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px)); transform:translateY(100%); transition:transform .3s cubic-bezier(.34,1.2,.64,1); display:flex; flex-direction:column; max-height:90vh; overflow-y:auto; }
   .cat-modal-overlay.open .cat-modal { transform:translateY(0); }
 
   .cat-modal-handle { width:40px; height:4px; background:var(--border); border-radius:4px; margin:12px auto 0; flex-shrink:0; }
@@ -400,7 +408,7 @@
   .reconnect-banner a { color:#fff; font-weight:700; text-decoration:underline; cursor:pointer; }
 
   /* SETTINGS PAGE */
-  .settings-page { display:none; flex:1; overflow-y:auto; padding-bottom:120px; background:var(--bg); }
+  .settings-page { display:none; flex:1; overflow-y:auto; padding-bottom:calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 30px); background:var(--bg); }
   .settings-page.active { display:block; }
 
   /* RECYCLE BIN (still a slide-view) */
@@ -408,7 +416,10 @@
 
   /* settings-top removed: now uses main header */
 
-  .settings-body { padding:16px 16px 48px; display:flex; flex-direction:column; gap:14px; }
+  /* .settings-body 同時被「設定頁」跟「回收桶」(slide-view.recycle，z-index 比 bottom-nav 低)共用，
+     回收桶沒有外層 .settings-page 的 padding 可以借，最下面的「清空回收桶」按鈕得靠這裡自己的
+     padding 撐出夠的空間，不然會被蓋在導覽列下面 */
+  .settings-body { padding:16px 16px calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 8px); display:flex; flex-direction:column; gap:14px; }
 
   .settings-brand { padding:16px 20px 12px; text-align:center; }
   .settings-brand-name { font-size:30px; font-weight:700; color:var(--text); letter-spacing:0.22em; margin-bottom:4px; }
@@ -8423,7 +8434,7 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
       </div>
 
       <!-- 版本 -->
-      <div class="settings-version">Simmer v1.6 · build 20260712</div>
+      <div class="settings-version">Simmer v1.7 · build 20260713</div>
     </div>
   </div>
 
