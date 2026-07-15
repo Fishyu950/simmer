@@ -400,11 +400,16 @@
   .toast.toast-bottom.show { transform:translateX(-50%) translateY(0); }
 
   /* SHEET LOST BANNER */
+  /* display:none 寫在 class 本身，原本的 showXxxBanner() 用 style.display='' 想顯示，
+     但那只是清掉 inline 覆蓋、退回 class 自己的 display:none，其實從來沒真的顯示過；
+     改成 .show 這個額外 class 來控制顯示，JS 那邊也要跟著改成 toggle class */
   .sheet-lost-banner { display:none; position:fixed; top:0; left:50%; transform:translateX(-50%); width:100%; max-width:420px; background:#c62828; color:#fff; padding:10px 16px; text-align:center; font-size:13px; z-index:998; letter-spacing:0.05em; }
+  .sheet-lost-banner.show { display:block; }
   .sheet-lost-banner a { color:#fff; font-weight:700; text-decoration:underline; cursor:pointer; }
 
   /* RECONNECT BANNER */
   .reconnect-banner { display:none; position:fixed; top:0; left:50%; transform:translateX(-50%); width:100%; max-width:420px; background:#e65100; color:#fff; padding:10px 16px; text-align:center; font-size:13px; z-index:997; letter-spacing:0.05em; }
+  .reconnect-banner.show { display:block; }
   .reconnect-banner a { color:#fff; font-weight:700; text-decoration:underline; cursor:pointer; }
 
   /* SETTINGS PAGE */
@@ -545,6 +550,10 @@
     .bottom-nav .nav-item:hover .nav-label, .bottom-nav .add-nav-btn:hover .nav-label { color: #f5f2e8; }
     .bottom-nav .nav-item.active:hover .nav-label { color: #f5f2e8; }
     .nav-item.active .nav-label { font-weight: 600; }
+    /* 帳號/登入區塊搬到 Simmer 品牌下面、食譜上面，跟下面的食譜/新增/回收桶那組
+       用一條淡分隔線隔開（帳號/登入兩個狀態互斥顯示，分隔線畫在食譜身上，不管哪個狀態
+       顯示都固定分得開） */
+    #navHome { margin-top: 8px; padding-top: 16px; border-top: 1px solid rgba(32,40,8,0.15); }
     /* 側邊欄第二段（設定頁內容搬過來的帳號/備份/同步/登出）用一條淡分隔線跟上面
        食譜/新增/回收桶那組分開，呼應參考圖側邊欄的分段列表感；原本「設定」按鈕的內容
        已經搬進來了，桌面版把舊按鈕藏起來，手機版不受影響（沒有 .desktop-only，維持顯示）*/
@@ -568,6 +577,20 @@
       font-family: 'Noto Serif TC', serif; padding: 0;
     }
     .sidebar-account-email { font-size: 10px; color: rgba(32,40,8,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* 登入過期提示：用警示色（--danger 系）讓它在綠色側邊欄裡明顯跳出來，點了就重新連線 */
+    .sidebar-reconnect-hint {
+      display: flex; align-items: center; gap: 8px;
+      margin: 4px 0 8px; padding: 8px 9px;
+      background: rgba(185,64,64,0.16);
+      border-radius: 8px;
+      color: #7a2323;
+      font-size: 12px; font-weight: 600;
+      cursor: pointer;
+    }
+    .sidebar-reconnect-hint .material-symbols-outlined { font-size: 17px; color: #7a2323; }
+    .sidebar-reconnect-hint:hover { background: rgba(185,64,64,0.26); }
+    /* 未登入時「Google 登入」這顆用強調色描邊，跟其他一般導覽項目區分開，一眼看出「尚未登入」 */
+    #loginSectionSidebar { border: 1.5px solid rgba(32,40,8,0.3); border-radius: 8px; }
     /* 版本號跟上面「開啟 Google 試算表」中間空約兩個項目高度的距離，不要緊貼著 */
     .sidebar-version { font-size: 10px; color: rgba(32,40,8,0.5); text-align: center; padding: 100px 0 4px; letter-spacing: 0.05em; }
 
@@ -8759,7 +8782,7 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
       </div>
 
       <!-- 版本 -->
-      <div class="settings-version">Simmer v1.35 · build 20260713</div>
+      <div class="settings-version">Simmer v1.38 · build 20260713</div>
     </div>
   </div>
 
@@ -8845,6 +8868,30 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
         <div class="sidebar-brand-tag">Slow down, cook more.</div>
       </div>
     </div>
+    <!-- 帳號/登入區塊移到最上面（Simmer 品牌下面、食譜上面），跟原本一樣共用 currentUser
+         狀態與 googleLogin() 等函式，只是搬動 DOM 位置，邏輯完全沒變 -->
+    <div class="sidebar-account no-select desktop-only" id="accountSectionSidebar" style="display:none">
+      <img id="userAvatarSidebar" class="sidebar-account-avatar" src="" alt="">
+      <div class="sidebar-account-info">
+        <div class="sidebar-account-name-row">
+          <span id="userNameSidebar" class="sidebar-account-name"></span>
+          <button id="editNameBtnSidebar" class="sidebar-edit-name-btn" onclick="editNickname('sidebar')" title="編輯暱稱"><span class="material-symbols-outlined">edit</span></button>
+          <input id="userNameInputSidebar" class="sidebar-account-name-input" style="display:none" onkeydown="handleNicknameKey(event,'sidebar')" onblur="saveNickname('sidebar')">
+        </div>
+        <div id="userEmailSidebar" class="sidebar-account-email"></div>
+      </div>
+    </div>
+    <!-- 登入過期提示：跟現有的 #reconnectBanner 同一個觸發點(showReconnectBanner/
+         hideReconnectBanner)，只是在側邊欄多一份更顯眼的提示，桌面版寬螢幕下
+         #reconnectBanner 那條頂部橫幅可能不夠顯眼 -->
+    <div class="sidebar-reconnect-hint no-select desktop-only" id="sidebarReconnectHint" onclick="googleLogin()" style="display:none">
+      <span class="material-symbols-outlined">sync_problem</span>
+      <span>連線中斷，點此重新連線</span>
+    </div>
+    <div class="nav-item no-select desktop-only" id="loginSectionSidebar" onclick="googleLogin()">
+      <div class="nav-icon-wrap"><span class="material-symbols-outlined">login</span></div>
+      <span class="nav-label">Google 登入</span>
+    </div>
     <div class="nav-item active no-select" id="navHome" onclick="navClick('home')">
       <div class="nav-icon-wrap">
         <span class="material-symbols-outlined">menu_book_2</span>
@@ -8870,21 +8917,6 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
          同步更新兩邊，onclick 都重用設定頁既有的同一批函式(googleLogin/exportBackup/
          importBackup/syncToSheets/openGoogleSheet/googleLogout)，沒有另外複製一份邏輯 -->
     <div class="sidebar-settings-group desktop-only">
-      <div class="sidebar-account no-select" id="accountSectionSidebar" style="display:none">
-        <img id="userAvatarSidebar" class="sidebar-account-avatar" src="" alt="">
-        <div class="sidebar-account-info">
-          <div class="sidebar-account-name-row">
-            <span id="userNameSidebar" class="sidebar-account-name"></span>
-            <button id="editNameBtnSidebar" class="sidebar-edit-name-btn" onclick="editNickname('sidebar')" title="編輯暱稱"><span class="material-symbols-outlined">edit</span></button>
-            <input id="userNameInputSidebar" class="sidebar-account-name-input" style="display:none" onkeydown="handleNicknameKey(event,'sidebar')" onblur="saveNickname('sidebar')">
-          </div>
-          <div id="userEmailSidebar" class="sidebar-account-email"></div>
-        </div>
-      </div>
-      <div class="nav-item no-select" id="loginSectionSidebar" onclick="googleLogin()">
-        <div class="nav-icon-wrap"><span class="material-symbols-outlined">login</span></div>
-        <span class="nav-label">Google 登入</span>
-      </div>
       <div class="nav-item no-select" onclick="exportBackup()">
         <div class="nav-icon-wrap"><span class="material-symbols-outlined">arrow_circle_down</span></div>
         <span class="nav-label">匯出備份</span>
@@ -8905,7 +8937,7 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
         <div class="nav-icon-wrap"><span class="material-symbols-outlined">logout</span></div>
         <span class="nav-label">登出</span>
       </div>
-      <div class="sidebar-version">Simmer v1.35 · build 20260713</div>
+      <div class="sidebar-version">Simmer v1.38 · build 20260713</div>
     </div>
 
     <!-- 原本的「設定」按鈕在桌面版隱藏（內容已搬到上面），手機版維持原樣不受影響 -->
@@ -10336,10 +10368,18 @@ function initGoogleAuth() {
 }
 
 function showReconnectBanner() {
-  document.getElementById('reconnectBanner').style.display = '';
+  // 原本用 style.display='' 想顯示，但那只是清掉 inline 覆蓋、退回 CSS class 自己的
+  // display:none，其實從來沒真的顯示過（手機版也一樣，不是這次才有的問題）。
+  // 改用 .show 這個 class 才會真的觸發 .reconnect-banner.show{display:block}
+  document.getElementById('reconnectBanner').classList.add('show');
+  // 桌面側邊欄的同一份提示，跟頂部橫幅同步顯示（元素不存在時安全跳過，不影響手機）
+  const sidebarHint = document.getElementById('sidebarReconnectHint');
+  if (sidebarHint) sidebarHint.style.display = '';
 }
 function hideReconnectBanner() {
-  document.getElementById('reconnectBanner').style.display = 'none';
+  document.getElementById('reconnectBanner').classList.remove('show');
+  const sidebarHint = document.getElementById('sidebarReconnectHint');
+  if (sidebarHint) sidebarHint.style.display = 'none';
 }
 
 function requestToken(promptVal = '') {
@@ -10743,10 +10783,12 @@ function syncAfterWrite() {
 }
 
 function showSheetLostBanner() {
-  document.getElementById('sheetLostBanner').style.display = '';
+  // 同樣的舊 bug：style.display='' 只會清掉 inline 覆蓋、退回 class 自己的 display:none，
+  // 從來沒真的顯示過，改用 .show class
+  document.getElementById('sheetLostBanner').classList.add('show');
 }
 function hideSheetLostBanner() {
-  document.getElementById('sheetLostBanner').style.display = 'none';
+  document.getElementById('sheetLostBanner').classList.remove('show');
 }
 
 async function verifySheetExists() {
