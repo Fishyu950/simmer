@@ -445,6 +445,323 @@
   .settings-row.danger .settings-row-icon { color:var(--danger); }
 
   .settings-version { text-align:center; font-size:12px; color:var(--muted); letter-spacing:0.1em; padding:8px 0 4px; }
+
+  /* ============================================================
+     ===== 桌面版 RWD 開始（≥861px）=====
+     以下規則全部包在 @media (min-width:861px) 裡，只在寬螢幕生效；
+     860px 以下（手機/平版直式）完全不受影響，維持修改前的行為與外觀。
+     新增的 .sidebar-brand、#navRecycleBinDesktop 兩個桌面專用元素預設 display:none，
+     手機版等同於它們不存在。
+     ============================================================ */
+  .desktop-only { display: none; }
+
+  @media (min-width: 861px) {
+
+    .desktop-only { display: flex; }
+
+    /* ── 整體版面：左側固定側邊欄 + 右側主內容 ── */
+    .outer { max-width: none; box-shadow: none; background: var(--bg); }
+    .app {
+      padding: 32px 36px 40px 250px; /* 210px 側邊欄 + 40px 間距 */
+      /* 拿掉 max-width+margin:auto 置中：這會讓首頁內容在寬螢幕下跟著置中往右移，
+         但其他全頁面板（詳情/編輯/資料夾）是滿版不置中，兩邊只在剛好 1400px 寬時對得上，
+         其他寬度就會跑掉，而且要面板也跟著置中又會把裡面的捲軸推離視窗真正的右邊緣、
+         不像正常網頁。改成不設上限、單純靠左滿版，全站每個頁面都用同一套「側邊欄右緣
+         +40px」對齊，不管視窗多寬都一致，捲軸也能貼齊真正的右邊界 ── */
+      max-width: none;
+      min-height: 100vh;
+    }
+
+    /* ── 側邊欄（重用手機版 .bottom-nav 既有元素/onclick，只改外觀排列，寬度收緊到 210px）── */
+    .bottom-nav {
+      position: fixed;
+      top: 0; left: 0; right: auto; bottom: auto;
+      transform: none;
+      width: 210px;
+      height: 100vh;
+      max-width: none;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      gap: 2px;
+      padding: 24px 16px;
+      /* 改成跟手機版頂部橫幅同一組淺綠漸層色（#7a9e6e/#bdd3ac/#d6eac9），呼應手機版色感；
+         背景變淺了，文字/圖示顏色比照手機版橫幅同一套「深橄欖綠字」配色，而不是原本深底配白字 */
+      background: linear-gradient(180deg, #7a9e6e 0%, #bdd3ac 60%, #d6eac9 100%);
+      box-shadow: 4px 0 24px rgba(32,40,8,0.10);
+      border-radius: 0 20px 20px 0;
+      overflow-y: auto;
+    }
+    .sidebar-brand {
+      display: flex; align-items: center; gap: 8px;
+      padding-bottom: 12px; margin-bottom: 10px;
+      border-bottom: 1px solid rgba(32,40,8,0.15);
+    }
+    .sidebar-brand-icon { width: 26px; height: 26px; border-radius: 7px; object-fit: cover; flex-shrink: 0; }
+    .sidebar-brand-name { font-family:'Noto Serif TC',serif; font-size: 14px; font-weight: 700; color: #202808; letter-spacing: 0.06em; }
+    .sidebar-brand-tag { font-size: 9px; color: rgba(32,40,8,0.55); letter-spacing: 0.04em; margin-top: 1px; }
+
+    .nav-item, .add-nav-btn {
+      /* 手機版 .nav-item/.add-nav-btn 本來有 flex:1（橫排時用來平分寬度），
+         桌面版改直排後如果不歸零，每個按鈕會被側邊欄剩餘高度拉伸撐開，
+         這裡明確重設成 flex:none 讓按鈕只佔自己內容需要的高度 */
+      flex: none;
+      flex-direction: row; justify-content: flex-start; align-items: center;
+      gap: 8px; width: 100%; padding: 8px 9px; border-radius: 8px;
+      transition: background .15s ease;
+    }
+    .nav-item:active, .add-nav-btn:active { background: rgba(32,40,8,0.12); }
+    .nav-item:hover, .add-nav-btn:hover { background: rgba(32,40,8,0.4); }
+    .nav-item .nav-icon-wrap, .add-nav-btn .add-nav-btn-circle {
+      width: 24px; height: 24px; background: transparent; border-radius: 7px; flex-shrink: 0;
+    }
+    /* 手機版 base 的 .add-nav-btn:active .add-nav-btn-circle{background:#33432B} 特異度
+       （class+pseudo-class+class）比上面這條（class+class）高，滑鼠點擊時的 :active 瞬間
+       會被那條蓋過去、跑出一塊深綠圓角矩形，這裡用 .bottom-nav 前綴疊高特異度蓋掉 */
+    .bottom-nav .add-nav-btn:active .add-nav-btn-circle { background: transparent; transform: none; }
+    /* 底色換成淺綠漸層後，文字/圖示比照手機版橫幅同一套配色改成深橄欖綠 #202808；
+       hover 時改用強調色 #c4603a（跟 App 其他地方的 accent 色一致）當作互動回饋。
+       手機版 base CSS 本來就有 .nav-item.active .material-symbols-outlined{color:var(--green)}
+       這條規則，跟這裡選擇器特異度算起來一樣高，實測瀏覽器沒有讓後寫的這裡贏，所以這裡統一
+       加上 .bottom-nav 前綴多繞一層祖先，確保桌面版規則的特異度比手機版那條高，不用碰手機版 CSS */
+    /* active 狀態只用 font-weight 當指標，圖示/文字顏色統一維持深綠色，
+       不再像之前那樣連文字顏色也切成不同色——不然「食譜」分頁常駐 active 看起來就跟其他項目顏色不一樣。
+       手機版 base CSS 的 .nav-item.active .material-symbols-outlined{color:var(--green)} 是
+       3 個 class 的特異度，這裡故意多繞 .bottom-nav 再疊上 .active 湊到 4 個 class，用選擇器
+       數量硬性壓過去（而不是靠「後寫的贏」），才不會再被那條規則吃回去 */
+    .bottom-nav .nav-item .material-symbols-outlined, .bottom-nav .add-nav-btn .material-symbols-outlined { font-size: 16px; color: #202808; }
+    .bottom-nav .nav-item:hover .material-symbols-outlined, .bottom-nav .add-nav-btn:hover .material-symbols-outlined { color: #f5f2e8; }
+    .bottom-nav .nav-item.active .material-symbols-outlined { color: #202808; }
+    /* 「食譜」常駐 active，預設跟其他項目同色，但 hover 時也要變白色，不能被 active 那條
+       擋住——active 規則跟上面的 hover 規則特異度打平，一樣用「多繞幾層」的方式疊高特異度確保穩贏 */
+    .bottom-nav .nav-item.active:hover .material-symbols-outlined { color: #f5f2e8; }
+    /* 「食譜」常駐 active，圖示底色也拿掉，跟其他項目長得完全一樣，不要有特殊底色；
+       手機版 base 的 .nav-item.active .nav-icon-wrap{background:var(--green-bg)} 一樣是
+       2 個 class 的特異度，這裡沿用同一招用 .bottom-nav 多繞一層蓋過去 */
+    .bottom-nav .nav-item.active .nav-icon-wrap { background: transparent; }
+    .bottom-nav .nav-item .nav-label, .bottom-nav .add-nav-btn .nav-label {
+      display: inline; font-size: 14.5px; color: #202808;
+    }
+    .bottom-nav .nav-item:hover .nav-label, .bottom-nav .add-nav-btn:hover .nav-label { color: #f5f2e8; }
+    .bottom-nav .nav-item.active:hover .nav-label { color: #f5f2e8; }
+    .nav-item.active .nav-label { font-weight: 600; }
+    /* 側邊欄第二段（設定頁內容搬過來的帳號/備份/同步/登出）用一條淡分隔線跟上面
+       食譜/新增/回收桶那組分開，呼應參考圖側邊欄的分段列表感；原本「設定」按鈕的內容
+       已經搬進來了，桌面版把舊按鈕藏起來，手機版不受影響（沒有 .desktop-only，維持顯示）*/
+    #navSettings { display: none; }
+    .sidebar-settings-group {
+      flex: none;
+      display: flex; flex-direction: column; gap: 2px;
+      margin-top: 10px; padding-top: 20px;
+      border-top: 1px solid rgba(32,40,8,0.15);
+    }
+    .sidebar-account { display: flex; align-items: center; gap: 8px; padding: 7px 9px; }
+    .sidebar-account-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: rgba(32,40,8,0.1); }
+    .sidebar-account-info { flex: 1; min-width: 0; }
+    .sidebar-account-name-row { display: flex; align-items: center; gap: 4px; }
+    .sidebar-account-name { font-size: 12.5px; font-weight: 600; color: #202808; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-edit-name-btn { background: none; border: none; cursor: pointer; color: rgba(32,40,8,0.6); padding: 1px; display: flex; align-items: center; flex-shrink: 0; }
+    .sidebar-edit-name-btn .material-symbols-outlined { font-size: 13px; }
+    .sidebar-account-name-input {
+      font-size: 12.5px; font-weight: 600; color: #202808; background: transparent;
+      border: none; border-bottom: 1px solid rgba(32,40,8,0.4); outline: none; width: 100%;
+      font-family: 'Noto Serif TC', serif; padding: 0;
+    }
+    .sidebar-account-email { font-size: 10px; color: rgba(32,40,8,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* 版本號跟上面「開啟 Google 試算表」中間空約兩個項目高度的距離，不要緊貼著 */
+    .sidebar-version { font-size: 10px; color: rgba(32,40,8,0.5); text-align: center; padding: 100px 0 4px; letter-spacing: 0.05em; }
+
+    /* ── 頂部列（沿用手機版 header 既有 DOM／onclick／頭像圖片邏輯，桌面版拿掉大橫幅裝飾與白底卡片，
+       改成純文字＋頭像貼在頁面背景上，標語（.header-greeting）跟手機版一樣保留顯示 ── */
+    header {
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      border-radius: 0;
+      padding: 4px 4px 0;
+      overflow: visible;
+    }
+    /* 這個裝飾用蕨葉 SVG 是 #headerHome 底下絕對定位鋪滿全區的純裝飾圖層，跟頭像/名稱無關；
+       原本被綠色大橫幅蓋住看不出來，橫幅縮小後才露餡，桌面版直接不顯示它 */
+    #headerHome > svg { display: none; }
+    .header-greeting { color: var(--muted); letter-spacing: 0.12em; }
+    .header-inner { justify-content: flex-start; gap: 14px; align-items: center; }
+    .header-left { order: 2; gap: 4px; }
+    .logo { font-size: 22px; font-weight: 700; letter-spacing: 0.05em; color: var(--text); }
+    .logo::before { display: none; }
+    .header-avatar { order: 1; width: 46px; height: 46px; }
+    .header-avatar .material-symbols-outlined { font-size: 28px; }
+
+    /* ── 分頁切換 / 列表捲動區：拿掉手機版為了避開底部導覽列而加的大 padding ──
+       分頁改成參考圖那樣兩個各自獨立、全圓角的膠囊按鈕，拿掉原本包住兩顆按鈕的外層膠囊底色；
+       分頁／搜尋框／食譜卡片格線三者之間的垂直間距統一抓 20px，左右邊界也統一不內縮，對齊同一條邊 ── */
+    .page-tabs { margin: 20px 0 0; max-width: none; background: transparent; padding: 0; gap: 10px; border-radius: 0; }
+    .page-tab { flex: none; padding: 10px 22px; border-radius: 999px; background: var(--card); box-shadow: 0 1px 4px var(--shadow); }
+    .page-tab.active { box-shadow: 0 2px 8px rgba(32,40,8,0.18); }
+    .tab-panel { padding-bottom: 40px; }
+    /* 搜尋框拿掉手機版的 420px 上限跟左右內距，讓輸入框邊界跟分頁/卡片切齊，上下間距統一改 20px */
+    .all-search { max-width: none; padding: 20px 0; }
+
+    /* ── 分類卡片 / 食譜卡片：自適應多欄，不寫死欄數（.folder-detail-grid 的欄數與 padding
+       在下面「內容較長的畫面」區塊一起設定，這裡不重複）── */
+    /* 根因是 .tab-panel 只設了 overflow-y:auto，CSS 規範會把沒設的 overflow-x 一起
+       強制變成 auto（兩軸只要一軸不是 visible，另一軸就不能維持 visible），導致左上角
+       用負值定位(-10px)疊出卡片外的 .cat-edit-btn 被裁掉。之前用「加內距讓卡片整體
+       右移」來閃開，卻造成卡片跟上面分頁按鈕對不齊。桌面版其實不需要 .tab-panel 自己
+       捲動（.app 不是固定高度，整頁本來就會自然捲動），改成 overflow:visible 讓瀏覽器
+       捲整頁就好，這樣完全不會裁到，卡片也能跟分頁按鈕切齊同一條線，內距歸零 */
+    .tab-panel { overflow: visible; }
+    .folder-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; padding: 20px 0 0; }
+    .recipe-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; padding: 0; }
+
+    /* ── 卡片視覺（沿用手機版原本的 DOM 結構與 class，這裡只加大圓角/陰影景深，
+       並用滑鼠 hover 做抬升效果——手機是觸控裝置沒有 hover，所以完全不影響手機版；
+       色調全部沿用既有 --accent／--green／header 漸層色，不引入新色系）── */
+    .folder-card, .recipe-card { border-radius: 20px; transition: transform .2s ease, box-shadow .2s ease; }
+    .folder-card:hover, .recipe-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(32,40,8,0.14); }
+
+    /* 分類卡片的 emoji 圖示加上圓底色塊，統一淺綠色（原本三色輪替顏色不一致，改成單一色） */
+    .folder-icon {
+      width: 52px; height: 52px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; margin: 0 auto 2px;
+      background: rgba(122,158,110,0.20);
+    }
+
+    /* 食譜卡片的分類標籤加一點同色系光暈，呼應參考圖裡彩色標籤的存在感 */
+    .cat-badge { padding: 3px 11px; box-shadow: 0 3px 8px rgba(250,182,45,0.32); }
+
+    /* ── 批次刪除工具列：拿掉橫條外框，改成貼右下角、直向排列的獨立按鈕群；
+       .sel-btn 本來就是 border-radius:50px 的獨立膠囊按鈕，這裡只是不再把三顆
+       按鈕包在同一條 .select-bar 橫條背景裡，「已選 N 道」文字改成單獨一顆小圓角標籤 ── */
+    .select-bar {
+      left: auto; right: 32px; bottom: 32px; transform: none;
+      width: auto; max-width: none;
+      flex-direction: column; align-items: flex-end; gap: 10px;
+      background: transparent; box-shadow: none; padding: 0;
+    }
+    .select-bar-left {
+      background: var(--card); padding: 8px 18px; border-radius: 999px;
+      box-shadow: 0 3px 12px var(--shadow);
+    }
+    .select-bar-btns { flex-direction: column; align-items: flex-end; gap: 10px; }
+    .sel-btn { box-shadow: 0 3px 12px rgba(32,40,8,0.15); }
+
+    /* ── 短小表單類（新增分類、emoji picker）：維持置中卡片式 modal。
+       表單欄位、送出/取消等按鈕沿用手機版同一套 HTML 與 JS function，這裡只改外層容器定位。
+       用 box-shadow 的「擴散陰影」技巧模擬背景遮罩，不用額外加 DOM 元素。 ── */
+    .cat-modal-overlay { align-items: center; }
+    .cat-modal {
+      border-radius: 22px;
+      max-width: 440px;
+      max-height: 86vh;
+      padding-bottom: 28px;
+      transform: translateY(16px) scale(0.98);
+    }
+    .cat-modal-overlay.open .cat-modal { transform: translateY(0) scale(1); }
+
+    /* ── 內容較長的畫面（食譜詳情、編輯/新增食譜、回收桶、分類展開）：
+       不做成小 modal，改成鋪滿側邊欄右側整個主內容區的「整頁」畫面，側邊欄全程保持可見/可點。
+       開關方式仍然是手機版原本的 .open class + pushNavLayer/layerBack，
+       這裡完全沒有新增或修改任何 JS，只是把同一個 .open 狀態在桌面寬度下改用不同 CSS 呈現。 ── */
+    .slide-view, .folder-detail-panel {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      left: 210px; /* 對齊側邊欄右緣，側邊欄維持可見 */
+      width: auto;
+      height: 100%;
+      max-width: none;
+      max-height: none;
+      transform: none;
+      border-radius: 0;
+      box-shadow: none;
+      background: var(--bg);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease;
+    }
+    .slide-view.open, .folder-detail-panel.open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: none;
+    }
+    /* 內容統一靠左對齊，跟首頁的內容起始位置（側邊欄右緣再 +40px）切齊，不要用
+       max-width+margin:auto 置中（.view-top/.detail-body/.edit-body/.save-bar/
+       .detail-hero 是 .slide-view 裡的 flex 子項目，flex 子項目只要 cross-axis
+       有 auto margin，align-self:stretch 就會被無視、整塊縮成內容最小寬度——
+       之前置中版本就是踩到這個坑。這裡改成明確 width:100% 撐滿＋不設 margin，
+       左右邊界改用各元素自己的 padding-left/right 控制，就不會再有這個問題）── */
+    .view-top, .detail-body, .edit-body,
+    .folder-detail-top, .folder-detail-grid, .detail-hero {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      align-self: stretch;
+    }
+    /* 頂部這條「返回 + 標題」列拿掉手機版的白底卡片外觀，改成跟首頁頂部列一樣：
+       純文字 + 圓形返回鈕直接貼在頁面背景上，靠左對齊（不是手機版的置中）── */
+    .view-top, .folder-detail-top {
+      background: transparent;
+      border-bottom: none;
+      box-shadow: none;
+      padding: 8px 24px 20px 40px;
+      justify-content: flex-start;
+      gap: 12px;
+    }
+    .view-back, .folder-detail-back {
+      position: static;
+      width: 36px; height: 36px;
+      background: var(--card);
+      box-shadow: 0 1px 4px var(--shadow);
+    }
+    .view-top-title, .folder-detail-title { font-size: 19px; }
+    /* 新增/編輯食譜頁、回收桶頁的返回鈕拿掉——桌面版可以直接點側邊欄離開，不需要這個入口；
+       只針對這兩個，不影響食譜詳情頁的返回鈕 */
+    #editView .view-back, #recycleBinView .view-back { display: none; }
+
+    /* 食譜名稱/分類標籤那塊也拿掉白底卡片，直接貼在頁面背景上，跟下面食材/做法內容留一點距離 */
+    .detail-hero { background: transparent; border-bottom: none; padding: 20px 24px 16px 40px; }
+
+    .detail-body { padding: 24px 24px 40px 40px; }
+    .folder-detail-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); padding: 20px 24px 40px 40px; }
+    /* 表單欄位縮窄（不要滿版貼邊），但也不要窄到看起來像手機版，跟下面 .save-bar 用同一個寬度數字對齊 */
+    .edit-body { padding: 20px 24px 110px 40px; max-width: 750px; }
+
+    /* 食譜詳情：食材清單／做法步驟改左右並排，欄距加大一點（個人備註／影片來源這些
+       後面才有、數量不固定的區塊維持獨佔一整行，不強制塞進兩欄）── */
+    .detail-body { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 64px; }
+    .detail-body .d-section:nth-child(1) { grid-column: 1; }
+    .detail-body .d-section:nth-child(2) { grid-column: 2; }
+    .detail-body .d-section:nth-child(n+3) { grid-column: 1 / -1; }
+
+    /* 取消／儲存拿掉白底 bar，但不要用 position:fixed 浮在內容上面（會蓋住備註框）。
+       手機版靠 .save-bar 是 .slide-view（flex 直向）的最後一個子項目、.edit-body 是
+       前一個 flex:1+overflow-y:auto 的項目，讓 .save-bar 自然貼在可捲動內容區「外面」
+       的下方、不隨內容捲動；桌面版沿用同一招（不設 position），只是改窄版寬度、拿掉白底 */
+    .save-bar {
+      width: 750px; /* 跟 .edit-body 同寬、同左邊界，兩者對齊 */
+      margin-left: 40px;
+      background: transparent;
+      box-shadow: none;
+      padding: 16px 24px 24px 0;
+    }
+
+    /* ── 設定頁：分組卡片，不要維持手機版單欄長清單。
+       .settings-body 在回收桶畫面(#recycleBinView)裡是 .slide-view（flex 直向）的直接子項目，
+       又踩到同一個「flex 子項目 margin:auto 置中會縮成內容最小寬度」的坑（回收桶那個破版
+       floating 小方塊就是這樣來的），改成 width:100%+align-self:stretch，內距改用
+       padding-left 控制、跟其他面板統一切齊，不要用 margin:auto 置中 ── */
+    .settings-page { padding-bottom: 40px; }
+    .settings-body { width: 100%; max-width: none; margin: 0; align-self: stretch; padding: 20px 24px 28px 40px; }
+    .settings-group-label {
+      font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.15em;
+      text-transform: uppercase; margin: 20px 4px 2px;
+    }
+    /* 回收桶是空的時候，不要用白底卡片包住那行文字，直接顯示在頁面背景上就好；
+       有資料時清單裡的 .settings-row 本身就有自己的白底，不靠這層外框也看得出分組 */
+    #recycleBinList { background: transparent; box-shadow: none; border-radius: 0; }
+  }
+  /* ===== 桌面版 RWD 結束 ===== */
 </style>
 </head>
 <body>
@@ -8224,7 +8541,7 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
         <div class="header-greeting">慢下時光，打造你的專屬風味筆記</div>
         <div class="logo"><em id="headerUserName">Simmer</em> 的微醺食光</div>
       </div>
-      <div class="header-avatar" onclick="navClick('settings')" title="設定">
+      <div class="header-avatar" onclick="headerAvatarClick()" title="設定">
         <img id="headerAvatarImg" src="" alt="" style="display:none" onerror="this.style.display='none';document.getElementById('headerAvatarIcon').style.display='block'">
         <span class="material-symbols-outlined" id="headerAvatarIcon">account_circle</span>
       </div>
@@ -8364,6 +8681,10 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
         </div>
       </div>
 
+      <!-- 桌面版分組標題：純新增的顯示用元素，預設 .desktop-only 隱藏，不影響手機版；
+           不移動、不包裝任何既有 settings-section，只是插在旁邊當標籤 -->
+      <div class="settings-group-label desktop-only">帳號</div>
+
       <!-- 帳號區塊（登入後顯示） -->
       <div class="settings-section" id="accountSection" style="display:none">
         <div class="settings-row" style="cursor:default">
@@ -8389,6 +8710,8 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
           <span class="material-symbols-outlined settings-row-arrow">chevron_right</span>
         </button>
       </div>
+
+      <div class="settings-group-label desktop-only">資料管理</div>
 
       <!-- 匯出 / 匯入 -->
       <div class="settings-section">
@@ -8424,6 +8747,8 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
         </button>
       </div>
 
+      <div class="settings-group-label desktop-only">其他</div>
+
       <!-- 登出 -->
       <div class="settings-section" id="logoutSection" style="display:none">
         <button class="settings-row danger" onclick="googleLogout()">
@@ -8434,7 +8759,7 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
       </div>
 
       <!-- 版本 -->
-      <div class="settings-version">Simmer v1.7 · build 20260713</div>
+      <div class="settings-version">Simmer v1.35 · build 20260713</div>
     </div>
   </div>
 
@@ -8512,6 +8837,14 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
 </div>
 
   <nav class="bottom-nav">
+    <!-- 桌面版側邊欄品牌區塊：預設隱藏(.desktop-only)，只有 ≥861px 才顯示，不影響手機版 -->
+    <div class="sidebar-brand desktop-only">
+      <img src="icon-192.png" class="sidebar-brand-icon" alt="Simmer">
+      <div>
+        <div class="sidebar-brand-name">Simmer</div>
+        <div class="sidebar-brand-tag">Slow down, cook more.</div>
+      </div>
+    </div>
     <div class="nav-item active no-select" id="navHome" onclick="navClick('home')">
       <div class="nav-icon-wrap">
         <span class="material-symbols-outlined">menu_book_2</span>
@@ -8524,6 +8857,58 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
       </div>
       <span class="nav-label">新增</span>
     </button>
+    <!-- 桌面版側邊欄專用捷徑：手機版底部導覽沒有回收桶，只加在桌面版側邊欄，重用既有 openRecycleBin() -->
+    <div class="nav-item no-select desktop-only" id="navRecycleBinDesktop" onclick="openRecycleBin()">
+      <div class="nav-icon-wrap">
+        <span class="material-symbols-outlined">delete</span>
+      </div>
+      <span class="nav-label">回收桶</span>
+    </div>
+
+    <!-- 桌面版側邊欄第二段：把設定頁內容搬過來，預設 .desktop-only 隱藏，不影響手機版；
+         帳號/登入/登出/改名這些元素跟設定頁share同一個 currentUser 狀態，由 updateAuthUI()
+         同步更新兩邊，onclick 都重用設定頁既有的同一批函式(googleLogin/exportBackup/
+         importBackup/syncToSheets/openGoogleSheet/googleLogout)，沒有另外複製一份邏輯 -->
+    <div class="sidebar-settings-group desktop-only">
+      <div class="sidebar-account no-select" id="accountSectionSidebar" style="display:none">
+        <img id="userAvatarSidebar" class="sidebar-account-avatar" src="" alt="">
+        <div class="sidebar-account-info">
+          <div class="sidebar-account-name-row">
+            <span id="userNameSidebar" class="sidebar-account-name"></span>
+            <button id="editNameBtnSidebar" class="sidebar-edit-name-btn" onclick="editNickname('sidebar')" title="編輯暱稱"><span class="material-symbols-outlined">edit</span></button>
+            <input id="userNameInputSidebar" class="sidebar-account-name-input" style="display:none" onkeydown="handleNicknameKey(event,'sidebar')" onblur="saveNickname('sidebar')">
+          </div>
+          <div id="userEmailSidebar" class="sidebar-account-email"></div>
+        </div>
+      </div>
+      <div class="nav-item no-select" id="loginSectionSidebar" onclick="googleLogin()">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">login</span></div>
+        <span class="nav-label">Google 登入</span>
+      </div>
+      <div class="nav-item no-select" onclick="exportBackup()">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">arrow_circle_down</span></div>
+        <span class="nav-label">匯出備份</span>
+      </div>
+      <div class="nav-item no-select" onclick="importBackup()">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">arrow_circle_up</span></div>
+        <span class="nav-label">匯入資料</span>
+      </div>
+      <div class="nav-item no-select" onclick="syncToSheets()">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">sync</span></div>
+        <span class="nav-label">同步 Sheets</span>
+      </div>
+      <div class="nav-item no-select" onclick="openGoogleSheet()">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">table_view</span></div>
+        <span class="nav-label">開啟試算表</span>
+      </div>
+      <div class="nav-item no-select" id="logoutSectionSidebar" onclick="googleLogout()" style="display:none">
+        <div class="nav-icon-wrap"><span class="material-symbols-outlined">logout</span></div>
+        <span class="nav-label">登出</span>
+      </div>
+      <div class="sidebar-version">Simmer v1.35 · build 20260713</div>
+    </div>
+
+    <!-- 原本的「設定」按鈕在桌面版隱藏（內容已搬到上面），手機版維持原樣不受影響 -->
     <div class="nav-item no-select" id="navSettings" onclick="navClick('settings')">
       <div class="nav-icon-wrap">
         <span class="material-symbols-outlined">manufacturing</span>
@@ -8553,6 +8938,40 @@ AFDAa8rMRgAAAABJRU5ErkJggg==" transform="matrix(0.24 0 0 0.24 -69.12 48.24)">
   <div class="ep-cats" id="recipeEpCats"></div>
   <div class="ep-grid" id="recipeEpGrid"></div>
 </div>
+
+<script>
+/* ============================================================================
+   桌面版專屬（獨立區塊，完全不修改下面主要 <script> 裡任何手機版函式的內容）
+   ----------------------------------------------------------------------------
+   根因：手機版的 screenStack / popstate 監聽 / handleExitAttempt()（定義在下面
+   主要 <script> 區塊最後面的「Android 返回鍵」段落）目前不分裝置寬度，無條件生效。
+   桌面瀏覽器有很多方式會觸發「真正的瀏覽器返回」（滑鼠返回鍵、Alt+←、Backspace、
+   觸控板兩指滑動…），這些都會讓 popstate 真的觸發一次。純桌面畫面下 screenStack
+   永遠是空陣列（桌面版所有點擊都沿用手機版既有的 openDetail/openEdit/pushNavLayer/
+   layerBack，唯一分岐是「畫面用什麼 CSS 呈現」，不是另外去操作 screenStack），
+   所以每次瀏覽器返回都會落到 handleExitAttempt() 的「顯示 Toast + 補回一層
+   history」分支——這個分支設計成「2 秒內按第二次才真的離開」，但桌面瀏覽器分頁
+   本來就沒有「離開 APP」這件事可做，於是變成每次按返回鍵都重新顯示 Toast，
+   如果按的間隔剛好落在 Toast 2.4 秒可視時間附近，看起來就像 Toast 卡住不消失。
+
+   修法：在這裡（必須放在下面主要 <script> 之前，才能比手機版的 popstate
+   監聽器先收到事件）另外註冊一個獨立的桌面版 popstate 監聽器。只有在
+   「視窗寬度 ≥861px」且「screenStack 目前是空的」這個精準條件下才
+   stopImmediatePropagation()，擋掉手機版監聽器繼續往下執行，避免誤觸
+   handleExitAttempt()。只要 screenStack 不是空的（代表使用者是在桌面版點卡片
+   進入詳情/編輯/回收桶等，仍然共用手機版那套 pushNavLayer/layerBack），
+   完全不擋，讓手機版原本的「返回關閉上一層」邏輯正常運作，維持點擊行為一致。
+   這裡沒有複製、包裝或修改任何一行手機版函式，只是加一個純讀取
+   screenStack.length 的判斷閘門，函式名稱、事件監聽都是全新獨立的。
+   ============================================================================ */
+window.addEventListener('popstate', function desktopPopstateGuard(e) {
+  var isDesktopWidth = window.innerWidth >= 861;
+  var stackIsEmpty = (typeof screenStack === 'undefined') || screenStack.length === 0;
+  if (isDesktopWidth && stackIsEmpty) {
+    e.stopImmediatePropagation();
+  }
+});
+</script>
 
 <script>
 const DEFAULT_TAGS = ['家常菜','飲料','豆漿飲','湯品','台式早午餐'];
@@ -9132,32 +9551,61 @@ function deleteCatModal() {
 
 function promptAddCategory() { openAddCat(); }
 
-function openFolderDetail(tag) {
-  document.getElementById('folderDetailTitle').textContent = tag;
+// 目前開著的分類（食譜分類 tab 點進去的資料夾），沒開就是 null；
+// 用來讓多選模式知道要重繪 #folderDetailGrid 還是 #recipeGrid
+let currentFolderTag = null;
+
+function renderFolderDetailGrid(tag) {
   const list = tag === '其它'
     ? recipes.filter(r => !r.tags || !r.tags.length)
     : recipes.filter(r => r.tags && r.tags[0] === tag);
   document.getElementById('folderDetailGrid').innerHTML = list.length
-    ? list.map((r,i) => recipeCardHTML(r,i)).join('')
+    ? list.map((r,i) => recipeCardHTML(r,i,true)).join('')
     : '<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:40px 0;font-size:14px">這個分類還沒有食譜</div>';
+}
+
+function openFolderDetail(tag) {
+  // .folder-detail-panel 的 z-index(150) 比回收桶(210)、詳情/編輯頁(350) 都低，
+  // 同樣道理，開啟前先關掉還開著的其他畫面，避免疊在下面看起來像沒反應
+  const editOpen = document.getElementById('editView').classList.contains('open');
+  const detailOpen = document.getElementById('detailView').classList.contains('open');
+  const recycleBinOpen = document.getElementById('recycleBinView')?.classList.contains('open');
+  if (editOpen) {
+    if (isEditDirty() && !confirm('有未儲存的內容，確定要離開嗎？')) return;
+    closeEdit();
+  }
+  if (detailOpen) closeDetail();
+  if (recycleBinOpen) closeRecycleBin();
+
+  document.getElementById('folderDetailTitle').textContent = tag;
+  currentFolderTag = tag;
+  renderFolderDetailGrid(tag);
   document.getElementById('folderDetail').classList.add('open');
   pushNavLayer('folderDetail');
 }
 
 function closeFolderDetail() {
+  if (selectMode) cancelSelect();
+  currentFolderTag = null;
   document.getElementById('folderDetail').classList.remove('open');
 }
 
-// ── SELECT MODE ──
+// ── SELECT MODE（同時支援「全部」分頁跟分類資料夾內，靠 currentFolderTag 判斷要重繪哪個格線）──
 let selectMode = false;
 let selectedIds = new Set();
+
+function refreshSelectableGrid() {
+  if (currentFolderTag !== null) renderFolderDetailGrid(currentFolderTag);
+  else renderAllGrid(lastGridList);
+}
 
 function enterSelectMode(id) {
   selectMode = true;
   selectedIds.add(id);
   document.getElementById('selectBar').classList.add('show');
-  document.querySelector('.bottom-nav').style.display = 'none';
-  renderAllGrid(lastGridList);
+  // 手機把底部導覽列藏起來多讓一點空間；桌面版側邊欄本來就在側邊不佔內容空間，一直保持顯示
+  if (window.innerWidth < 861) document.querySelector('.bottom-nav').style.display = 'none';
+  refreshSelectableGrid();
   updateSelectBar();
 }
 
@@ -9165,8 +9613,8 @@ function cancelSelect() {
   selectMode = false;
   selectedIds.clear();
   document.getElementById('selectBar').classList.remove('show');
-  document.querySelector('.bottom-nav').style.display = '';
-  renderAllGrid(lastGridList);
+  if (window.innerWidth < 861) document.querySelector('.bottom-nav').style.display = '';
+  refreshSelectableGrid();
 }
 
 function toggleSelect(id) {
@@ -9295,7 +9743,8 @@ function cardClick(id, e) {
 }
 
 // ── ALL GRID ──
-const PAGE_SIZE = 10;
+// 桌面版寬螢幕一排能放更多卡片，一頁顯示 24 筆；手機維持 10 筆不變
+const PAGE_SIZE = window.innerWidth >= 861 ? 24 : 10;
 let allCurrentPage = 1;
 
 function renderAllGrid(list) {
@@ -9385,6 +9834,11 @@ function renderDetail(id) {
   `;
 }
 function openDetail(id) {
+  // 跟 openRecycleBin() 同樣道理：桌面版側邊欄一直可點，回收桶還開著時可以直接點卡片
+  // 進食譜詳情，這裡先關掉，避免兩層同時 .open 造成後續狀態、返回鍵行為對不上
+  const recycleBinOpen = document.getElementById('recycleBinView')?.classList.contains('open');
+  if (recycleBinOpen) closeRecycleBin();
+
   currentEditId = id;
   renderDetail(id);
   const dv = document.getElementById('detailView'); dv.classList.add('open'); dv.scrollTop = 0;
@@ -9398,6 +9852,12 @@ function openEditFromDetail() {
   openEdit(currentEditId);
 }
 function openEdit(id) {
+  // 跟 openRecycleBin()/openDetail() 同樣道理：回收桶還開著時直接點側邊欄「新增」
+  // 也會疊出兩層 .open，這裡先關掉回收桶（不關 detailView，openEditFromDetail() 要靠
+  // 編輯頁疊在詳情頁之上，故意不關）
+  const recycleBinOpen = document.getElementById('recycleBinView')?.classList.contains('open');
+  if (recycleBinOpen) closeRecycleBin();
+
   const isNew = !id;
   document.getElementById('editViewTitle').textContent = isNew ? '新增食譜' : '編輯食譜';
   const r = isNew
@@ -9642,6 +10102,17 @@ function isEditDirty() {
   return getEditSnapshot() !== editOriginalSnapshot;
 }
 
+// 首頁頭像點擊：桌面版設定內容已經搬進側邊欄，不用再開一次設定頁；
+// 未登入時改成跟側邊欄「使用 Google 登入」同一個動作，已登入時側邊欄本來就一直看得到帳號資訊，不用再導頁。
+// 手機版沒有側邊欄，維持原本點頭像開設定頁的行為
+function headerAvatarClick() {
+  if (window.innerWidth >= 861) {
+    if (!currentUser) googleLogin();
+    return;
+  }
+  navClick('settings');
+}
+
 function navClick(page) {
   if (page === currentPage) {
     // 同頁但有子頁面開著，直接關掉
@@ -9652,6 +10123,9 @@ function navClick(page) {
   const editOpen = document.getElementById('editView').classList.contains('open');
   const detailOpen = document.getElementById('detailView').classList.contains('open');
   const folderOpen = document.getElementById('folderDetail')?.classList.contains('open');
+  // 手機版點不到這裡：滿版彈窗（含回收桶）z-index 蓋住底部導覽列，側邊欄根本點不到。
+  // 桌面版側邊欄一直保持可點，才會出現「開著回收桶時直接點側邊欄食譜」這個手機版不會發生的情境
+  const recycleBinOpen = document.getElementById('recycleBinView')?.classList.contains('open');
 
   if (editOpen) {
     // 編輯頁：有改動才確認
@@ -9662,6 +10136,7 @@ function navClick(page) {
   }
   if (detailOpen) closeDetail();
   if (folderOpen) closeFolderDetail();
+  if (recycleBinOpen) closeRecycleBin();
 
   if (page === 'settings') openSettings();
   else goHome();
@@ -9671,9 +10146,14 @@ function closeAllSubViews() {
   const editOpen = document.getElementById('editView').classList.contains('open');
   const detailOpen = document.getElementById('detailView').classList.contains('open');
   const folderOpen = document.getElementById('folderDetail')?.classList.contains('open');
+  const recycleBinOpen = document.getElementById('recycleBinView')?.classList.contains('open');
+  // 原本是 if/else-if，只會關掉「第一個符合的」畫面；手機版一次只可能開一層彈窗所以看不出問題，
+  // 但桌面版側邊欄一直可點，可能疊出「回收桶開著時又點新增」這種兩層都 .open 的情況，
+  // else-if 只關得掉新增、回收桶留在下面關不掉，這裡改成各自獨立判斷，全部一起關
   if (editOpen) { if (!isEditDirty() || confirm('有未儲存的內容，確定要離開嗎？')) closeEdit(); }
-  else if (detailOpen) closeDetail();
-  else if (folderOpen) closeFolderDetail();
+  if (detailOpen) closeDetail();
+  if (folderOpen) closeFolderDetail();
+  if (recycleBinOpen) closeRecycleBin();
 }
 
 // ── SETTINGS（分頁切換，無 slide）──
@@ -9736,15 +10216,34 @@ function updateAuthUI() {
     document.getElementById('userEmail').textContent = currentUser.email;
     document.getElementById('userAvatar').src        = currentUser.avatar || '';
   }
+  // 桌面側邊欄是同一份帳號狀態的第二份顯示；元素本來就存在 DOM 裡（只是 CSS 在手機上
+  // 隱藏），這裡一起更新，跟設定頁保持同步，不影響手機（元素隱藏、更新內容無視覺效果）
+  const sbAccount = document.getElementById('accountSectionSidebar');
+  const sbLogin   = document.getElementById('loginSectionSidebar');
+  const sbLogout  = document.getElementById('logoutSectionSidebar');
+  if (sbAccount) sbAccount.style.display = loggedIn ? '' : 'none';
+  if (sbLogin)   sbLogin.style.display   = loggedIn ? 'none' : '';
+  if (sbLogout)  sbLogout.style.display  = loggedIn ? '' : 'none';
+  if (loggedIn) {
+    const sbName   = document.getElementById('userNameSidebar');
+    const sbEmail  = document.getElementById('userEmailSidebar');
+    const sbAvatar = document.getElementById('userAvatarSidebar');
+    if (sbName)   sbName.textContent  = currentUser.name;
+    if (sbEmail)  sbEmail.textContent = currentUser.email;
+    if (sbAvatar) sbAvatar.src        = currentUser.avatar || '';
+  }
 }
 
 // ── 暱稱行內編輯 ──
 let _nicknameCancelled = false;
 
-function editNickname() {
-  const nameEl = document.getElementById('userName');
-  const input  = document.getElementById('userNameInput');
-  const btn    = document.getElementById('editNameBtn');
+// scope 預設是設定頁那一份（呼叫時不帶參數，行為跟原本完全一樣）；
+// 桌面側邊欄那份用 scope='sidebar'，對應 id 多一個 Sidebar 字尾
+function editNickname(scope) {
+  const p = scope === 'sidebar' ? 'Sidebar' : '';
+  const nameEl = document.getElementById('userName' + p);
+  const input  = document.getElementById('userNameInput' + p);
+  const btn    = document.getElementById('editNameBtn' + p);
   input.value = nameEl.textContent;
   nameEl.style.display = 'none';
   btn.style.display    = 'none';
@@ -9753,14 +10252,18 @@ function editNickname() {
   input.select();
 }
 
-function saveNickname() {
+function saveNickname(scope) {
   if (_nicknameCancelled) { _nicknameCancelled = false; return; }
-  const nameEl = document.getElementById('userName');
-  const input  = document.getElementById('userNameInput');
-  const btn    = document.getElementById('editNameBtn');
+  const p = scope === 'sidebar' ? 'Sidebar' : '';
+  const nameEl = document.getElementById('userName' + p);
+  const input  = document.getElementById('userNameInput' + p);
+  const btn    = document.getElementById('editNameBtn' + p);
   const newName = input.value.trim();
   if (newName) {
     nameEl.textContent = newName;
+    // 設定頁／側邊欄是同一個名字的兩份顯示，另一份也同步更新文字，避免兩邊看到的不一樣
+    const otherNameEl = document.getElementById('userName' + (p ? '' : 'Sidebar'));
+    if (otherNameEl) otherNameEl.textContent = newName;
     localStorage.setItem('simmer_user_name', newName);
     if (currentUser) currentUser.name = newName;
     updateHeaderUser(newName, null);
@@ -9771,19 +10274,20 @@ function saveNickname() {
   input.style.display  = 'none';
 }
 
-function cancelNicknameEdit() {
+function cancelNicknameEdit(scope) {
   _nicknameCancelled = true;
-  const nameEl = document.getElementById('userName');
-  const input  = document.getElementById('userNameInput');
-  const btn    = document.getElementById('editNameBtn');
+  const p = scope === 'sidebar' ? 'Sidebar' : '';
+  const nameEl = document.getElementById('userName' + p);
+  const input  = document.getElementById('userNameInput' + p);
+  const btn    = document.getElementById('editNameBtn' + p);
   nameEl.style.display = '';
   btn.style.display    = '';
   input.style.display  = 'none';
 }
 
-function handleNicknameKey(e) {
-  if (e.key === 'Enter')  { e.preventDefault(); document.getElementById('userNameInput').blur(); }
-  if (e.key === 'Escape') { cancelNicknameEdit(); }
+function handleNicknameKey(e, scope) {
+  if (e.key === 'Enter')  { e.preventDefault(); e.target.blur(); }
+  if (e.key === 'Escape') { cancelNicknameEdit(scope); }
 }
 
 // ── GSI 初始化 ──
@@ -10292,6 +10796,19 @@ function updateRecycleBadge() {
 }
 
 function openRecycleBin() {
+  // 手機版點不到這裡：回收桶只能從設定頁進，不可能同時有編輯/詳情頁疊在上面。
+  // 桌面版側邊欄的回收桶捷徑一直可點，若編輯頁還開著沒關，兩層都 .open 時回收桶的
+  // z-index（210）比編輯/詳情頁（350）低，會被蓋在下面，看起來像「點了沒反應」
+  const editOpen = document.getElementById('editView').classList.contains('open');
+  const detailOpen = document.getElementById('detailView').classList.contains('open');
+  const folderOpen = document.getElementById('folderDetail')?.classList.contains('open');
+  if (editOpen) {
+    if (isEditDirty() && !confirm('有未儲存的內容，確定要離開嗎？')) return;
+    closeEdit();
+  }
+  if (detailOpen) closeDetail();
+  if (folderOpen) closeFolderDetail();
+
   renderRecycleBin();
   document.getElementById('recycleBinView').classList.add('open');
   pushNavLayer('recycleBin');
@@ -10593,6 +11110,9 @@ function pushCompensatingState() {
 
 let lastBackPressTime = 0;
 function handleExitAttempt() {
+  // 「再按一次返回鍵離開」是手機實體返回鍵的慣例，桌面瀏覽器不需要這層確認，
+  // 直接讓瀏覽器自然返回/離開；用寬度判斷，手機（<861px）完全不受影響
+  if (window.innerWidth >= 861) return;
   const now = Date.now();
   if (now - lastBackPressTime < 2000) {
     // 2 秒內第二次按返回鍵：不再攔截，讓瀏覽器/系統自然關閉頁面
